@@ -111,7 +111,7 @@ class _SignupScreenState extends State<SignupScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/onboarding'); 
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

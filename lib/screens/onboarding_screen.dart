@@ -103,9 +103,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Column(
                   children: [
                     SizedBox(
-                      width: double.infinity,
+                      width: double.infinity, 
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pushNamed(context, '/login'),
+                        onPressed: () => Navigator.pushNamed(context, '/home'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,
@@ -115,7 +115,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: const Text(
-                          'Login',
+                          'Lets Start', 
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -123,24 +123,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     
                     const SizedBox(height: 16),
                     
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pushNamed(context, '/signup'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text(
-                          'Sign Up',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               
@@ -214,7 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _goToAuth() {
-    Navigator.pushNamed(context, '/login');
+    Navigator.pushNamed(context, '/home');
   }
 }
 

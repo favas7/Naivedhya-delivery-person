@@ -338,7 +338,7 @@ class ProfileScreen extends StatelessWidget {
                 final authProvider = Provider.of<AuthProvider>(context, listen: false);
                 await authProvider.signOut();
                 Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, '/onboarding');
+                Navigator.pushReplacementNamed(context, '/login'); 
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
