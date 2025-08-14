@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
+import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
 
@@ -11,107 +12,178 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isOnline = false;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
+  }
+
+  void _initializeData() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final deliveryProvider = Provider.of<DeliveryProvider>(context, listen: false);
+    
+    if (authProvider.user != null) {
+      deliveryProvider.initializeDeliveryData(authProvider.user!.id);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              _buildHeader(),
-              
-              const SizedBox(height: 24),
-              
-              // Online/Offline Status
-              _buildStatusToggle(),
-              
-              const SizedBox(height: 24),
-              
-              // Stats Cards
-              _buildStatsCards(),
-              
-              const SizedBox(height: 24),
-              
-              // Quick Actions
-              _buildQuickActions(),
-              
-              const SizedBox(height: 24),
-              
-              // Recent Orders
-              _buildRecentOrders(),
-            ],
-          ),
+        child: Consumer2<AuthProvider, DeliveryProvider>(
+          builder: (context, authProvider, deliveryProvider, child) {
+            if (deliveryProvider.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            if (deliveryProvider.errorMessage != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red[300],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading data',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      deliveryProvider.errorMessage!,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        deliveryProvider.clearError();
+                        _initializeData();
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                if (authProvider.user != null) {
+                  await deliveryProvider.refreshData(authProvider.user!.id);
+                }
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    _buildHeader(deliveryProvider),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Online/Offline Status
+                    _buildStatusToggle(authProvider, deliveryProvider),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Stats Cards
+                    _buildStatsCards(deliveryProvider),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Quick Actions
+                    _buildQuickActions(),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Recent Orders
+                    _buildRecentOrders(deliveryProvider),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        return Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome back!',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    authProvider.user?.email?.split('@')[0] ?? 'Delivery Partner',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+  Widget _buildHeader(DeliveryProvider deliveryProvider) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Welcome back!',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                onPressed: () {
-                  // Show notifications
-                },
-                icon: const Icon(
-                  Icons.notifications_outlined,
+              const SizedBox(height: 4),
+              Text(
+                deliveryProvider.deliveryPersonName,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            onPressed: () {
+              // Show notifications
+            },
+            icon: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.textPrimary,
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildStatusToggle() {
+  Widget _buildStatusToggle(AuthProvider authProvider, DeliveryProvider deliveryProvider) {
+    final isOnline = deliveryProvider.isAvailable;
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: _isOnline ? AppColors.primaryGradient : const LinearGradient(
+        gradient: isOnline ? AppColors.primaryGradient : const LinearGradient(
           colors: [Colors.grey, Colors.grey],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: (_isOnline ? AppColors.primary : Colors.grey).withAlpha(0),
+            color: (isOnline ? AppColors.primary : Colors.grey).withAlpha(51),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -124,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _isOnline ? 'You\'re Online' : 'You\'re Offline',
+                  isOnline ? 'You\'re Online' : 'You\'re Offline',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -133,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _isOnline 
+                  isOnline 
                       ? 'Ready to accept new orders'
                       : 'Go online to start receiving orders',
                   style: const TextStyle(
@@ -145,11 +217,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Switch(
-            value: _isOnline,
-            onChanged: (value) {
-              setState(() {
-                _isOnline = value;
-              });
+            value: isOnline,
+            onChanged: (value) async {
+              if (authProvider.user != null) {
+                await deliveryProvider.toggleAvailability(authProvider.user!.id);
+              }
             },
             activeColor: Colors.white,
             activeTrackColor: Colors.white30,
@@ -159,13 +231,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatsCards() {
+  Widget _buildStatsCards(DeliveryProvider deliveryProvider) {
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             'Today\'s Orders',
-            '12',
+            deliveryProvider.todaysOrdersCount.toString(),
             Icons.assignment_turned_in,
             AppColors.success,
           ),
@@ -174,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildStatCard(
             'Today\'s Earnings',
-            '₹850',
+            '₹${deliveryProvider.todaysEarnings.toStringAsFixed(0)}',
             Icons.currency_rupee,
             AppColors.accent,
           ),
@@ -191,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(0),
+            color: Colors.black.withAlpha(26),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -202,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withAlpha(0),
+              color: color.withAlpha(26),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -294,9 +366,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withAlpha(0),
+          color: color.withAlpha(26),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha(0)),
+          border: Border.all(color: color.withAlpha(51)),
         ),
         child: Column(
           children: [
@@ -321,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecentOrders() {
+  Widget _buildRecentOrders(DeliveryProvider deliveryProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -351,20 +423,61 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 3,
-          itemBuilder: (context, index) {
-            return _buildOrderCard(
-              orderId: '#ORD${1234 + index}',
-              customerName: 'Customer ${index + 1}',
-              amount: '₹${(index + 1) * 150}',
-              status: index == 0 ? 'Delivered' : (index == 1 ? 'In Progress' : 'Pending'),
-              time: '${2 - index} hours ago',
-            );
-          },
-        ),
+        
+        if (deliveryProvider.recentOrders.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.shopping_bag_outlined,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No recent orders',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Your recent orders will appear here',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: deliveryProvider.recentOrders.length,
+            itemBuilder: (context, index) {
+              final order = deliveryProvider.recentOrders[index];
+              return _buildOrderCard(
+                orderId: order['order_number'] ?? '#${order['order_id']?.toString().substring(0, 8)}',
+                customerName: order['customer_name'] ?? 'Customer',
+                amount: '₹${(order['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'}',
+                status: deliveryProvider.getOrderStatusDisplay(order['status'], order['delivery_status']),
+                time: deliveryProvider.getTimeAgo(order['created_at']),
+                deliveryProvider: deliveryProvider,
+              );
+            },
+          ),
       ],
     );
   }
@@ -375,14 +488,19 @@ class _HomeScreenState extends State<HomeScreen> {
     required String amount,
     required String status,
     required String time,
+    required DeliveryProvider deliveryProvider,
   }) {
     Color statusColor;
-    switch (status) {
-      case 'Delivered':
+    switch (status.toLowerCase()) {
+      case 'delivered':
         statusColor = AppColors.success;
         break;
-      case 'In Progress':
+      case 'in progress':
+      case 'picked up':
         statusColor = AppColors.warning;
+        break;
+      case 'assigned':
+        statusColor = AppColors.primary;
         break;
       default:
         statusColor = AppColors.textSecondary;
@@ -401,7 +519,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(0),
+              color: AppColors.primary.withAlpha(26),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -449,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: statusColor.withAlpha(0),
+                        color: statusColor.withAlpha(26),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

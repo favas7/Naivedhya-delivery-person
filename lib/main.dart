@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/config/supabase_config.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
+import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/screens/auth/forgot_password_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/login_screen.dart';
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => DeliveryProvider()),
       ],
       child: MaterialApp(
         title: 'Naivedhya Delivery Partner',

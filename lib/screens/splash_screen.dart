@@ -15,10 +15,20 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    
+    // Wait for the widget tree to be fully built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeAnimations();
+    });
+  }
+
+  void _initializeAnimations() {
+    if (!mounted) return;
     
     _animationController = AnimationController(
       duration: const Duration(seconds: 2),
@@ -41,8 +51,11 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.elasticOut,
     ));
 
+    setState(() {
+      _isInitialized = true;
+    });
+
     _animationController.forward();
-    
     _navigateToNextScreen();
   }
 
@@ -62,87 +75,96 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _animationController.dispose();
+    if (_isInitialized) {
+      _animationController.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.primary, // Fallback background
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.primaryGradient,
         ),
         child: Center(
-          child: AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // App Logo/Icon
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(0),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.delivery_dining,
-                          size: 60,
-                          color: AppColors.primary,
-                        ),
+          child: _isInitialized
+              ? AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: _buildSplashContent(),
                       ),
-                      
-                      const SizedBox(height: 30),
-                      
-                      // App Name
-                      const Text(
-                        'Naivedhya',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      
-                      const Text(
-                        'Delivery Partner',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white70,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 50),
-                      
-                      // Loading indicator
-                      const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        strokeWidth: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+                    );
+                  },
+                )
+              : _buildSplashContent(), // Show static content while initializing
         ),
       ),
+    );
+  }
+
+  Widget _buildSplashContent() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // App Logo/Icon
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.delivery_dining,
+            size: 60,
+            color: AppColors.primary,
+          ),
+        ),
+        
+        const SizedBox(height: 30),
+        
+        // App Name
+        const Text(
+          'Naivedhya',
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1.2,
+          ),
+        ),
+        
+        const Text(
+          'Delivery Partner',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.white70,
+            letterSpacing: 0.8,
+          ),
+        ),
+        
+        const SizedBox(height: 50),
+        
+        // Loading indicator
+        const CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          strokeWidth: 2,
+        ),
+      ],
     );
   }
 }
