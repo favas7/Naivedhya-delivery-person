@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/config/supabase_config.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
+import 'package:naivedhya_delivery_app/provider/order_provider.dart'; // Add this import
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/screens/auth/forgot_password_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/login_screen.dart';
@@ -23,7 +24,7 @@ void main() async {
   );
 
   runApp(const MyApp());
-}
+} 
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -35,6 +36,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => DeliveryProvider()),
+        ChangeNotifierProvider(create: (_) => OrdersProvider()),
+        // Set up the sync callback after both providers are created
+        ProxyProvider2<DeliveryProvider, OrdersProvider, void>(
+          update: (context, deliveryProvider, ordersProvider, _) {
+            ordersProvider.setSyncCallback((userId) {
+              deliveryProvider.syncWithOrdersProvider(userId);
+            });
+            return null;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'Naivedhya Delivery Partner',

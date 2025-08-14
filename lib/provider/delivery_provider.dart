@@ -127,6 +127,11 @@ class DeliveryProvider with ChangeNotifier {
     await _fetchStatsData(userId);
   }
   
+  // Method to be called when orders are updated from OrdersProvider
+  Future<void> syncWithOrdersProvider(String userId) async {
+    await _fetchStatsData(userId);
+  }
+  
   // Clear error message
   void clearError() {
     _errorMessage = null;
