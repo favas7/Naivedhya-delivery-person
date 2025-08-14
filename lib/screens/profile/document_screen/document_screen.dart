@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
-import '../../utils/app_colors.dart';
+import '../../../utils/app_colors.dart';
 
 class DocumentsScreen extends StatefulWidget {
   const DocumentsScreen({super.key});

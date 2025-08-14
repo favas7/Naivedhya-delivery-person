@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../utils/app_colors.dart';
-import 'home/home_screen.dart';
-import 'orders/orders_screen.dart';
-import 'profile/profile_screen.dart';
-import 'earnings/earnings_screen.dart';
+import '../../utils/app_colors.dart';
+import '../home/home_screen.dart';
+import '../orders/orders_screen.dart';
+import '../profile/profile_screen.dart';
+import '../earnings/earnings_screen.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});

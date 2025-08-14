@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
-import 'package:naivedhya_delivery_app/screens/profile/document_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/vehicle_details_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen/personal_info_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/vehicle_detail_screen/vehicle_details_screen.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
 

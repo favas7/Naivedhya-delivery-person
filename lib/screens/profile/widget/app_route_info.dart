@@ -1,10 +1,10 @@
 // lib/routes/app_routes.dart
 
 import 'package:flutter/material.dart';
-import 'package:naivedhya_delivery_app/screens/profile/document_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen/personal_info_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/profile_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/vehicle_details_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/vehicle_detail_screen/vehicle_details_screen.dart';
 
 class AppRoutes {
   static const String profile = '/profile';
