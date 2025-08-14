@@ -438,6 +438,8 @@ Future<String?> _uploadImage(String userId, String imagePath, String imageType) 
     }
   }
 
+  
+
   /// Clear user data (for logout)
   void clearUserData() {
     _userProfile = null;

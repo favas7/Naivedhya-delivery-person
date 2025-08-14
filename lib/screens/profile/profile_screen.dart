@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
+import 'package:naivedhya_delivery_app/provider/user_provider.dart';
+import 'package:naivedhya_delivery_app/screens/profile/document_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/vehicle_details_screen.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
 
@@ -30,8 +34,22 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
+    return Consumer2<AuthProvider, UserProvider>(
+      builder: (context, authProvider, userProvider, child) {
+        // Load user profile if not loaded
+        if (authProvider.user != null && userProvider.userProfile == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            userProvider.getUserProfile(authProvider.user!.id);
+          });
+        }
+
+        final profile = userProvider.userProfile;
+        final userName = profile?['full_name'] ?? profile?['name'] ?? 
+                        authProvider.user?.email?.split('@')[0] ?? 'Delivery Partner';
+        final userEmail = profile?['email'] ?? authProvider.user?.email ?? 'deliverypartner@naivedhya.com';
+        final earnings = profile?['earnings']?.toDouble() ?? 0.0;
+        final isVerified = profile?['is_verified'] ?? false;
+
         return Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -71,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
                 
                 // User Info
                 Text(
-                  authProvider.user?.email?.split('@')[0] ?? 'Delivery Partner',
+                  userName,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -81,12 +99,24 @@ class ProfileScreen extends StatelessWidget {
                 
                 const SizedBox(height: 8),
                 
-                Text(
-                  authProvider.user?.email ?? 'deliverypartner@naivedhya.com',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      userEmail,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (isVerified)
+                      const Icon(
+                        Icons.verified,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                  ],
                 ),
                 
                 const SizedBox(height: 16),
@@ -97,7 +127,7 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     _buildStatItem('4.8', 'Rating', Icons.star),
                     _buildStatItem('156', 'Orders', Icons.assignment),
-                    _buildStatItem('2.5k', 'Earned', Icons.currency_rupee),
+                    _buildStatItem('₹${earnings.toStringAsFixed(0)}', 'Earned', Icons.currency_rupee),
                   ],
                 ),
               ],
@@ -142,19 +172,40 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.person_outline,
               title: 'Personal Information',
               subtitle: 'Update your personal details',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PersonalInformationScreen(),
+                  ),
+                );
+              },
             ),
             _buildProfileOption(
               icon: Icons.motorcycle,
               title: 'Vehicle Details',
               subtitle: 'Manage your vehicle information',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VehicleDetailsScreen(),
+                  ),
+                );
+              },
             ),
             _buildProfileOption(
               icon: Icons.credit_card,
               title: 'Documents',
               subtitle: 'License, Aadhaar and other documents',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DocumentsScreen(),
+                  ),
+                );
+              },
             ),
           ]),
           
@@ -336,7 +387,11 @@ class ProfileScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                
                 await authProvider.signOut();
+                userProvider.clearUserData(); // Clear user data on logout
+                
                 Navigator.of(context).pop();
                 Navigator.pushReplacementNamed(context, '/login'); 
               },

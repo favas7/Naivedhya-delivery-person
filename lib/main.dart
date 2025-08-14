@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/config/supabase_config.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
-import 'package:naivedhya_delivery_app/provider/order_provider.dart'; // Add this import
+import 'package:naivedhya_delivery_app/provider/order_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/screens/auth/forgot_password_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/login_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/signup/signup_screen.dart';
 import 'package:naivedhya_delivery_app/screens/bottom_nav_screen.dart';
 import 'package:naivedhya_delivery_app/screens/onboarding_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/widget/app_route_info.dart';
 import 'package:naivedhya_delivery_app/screens/splash_screen.dart';
 import 'package:naivedhya_delivery_app/utils/app_colors.dart';
 import 'package:provider/provider.dart';
@@ -37,13 +38,14 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => DeliveryProvider()),
         ChangeNotifierProvider(create: (_) => OrdersProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         // Set up the sync callback after both providers are created
         ProxyProvider2<DeliveryProvider, OrdersProvider, void>(
           update: (context, deliveryProvider, ordersProvider, _) {
             ordersProvider.setSyncCallback((userId) {
               deliveryProvider.syncWithOrdersProvider(userId);
             });
-            return null;
+            return;
           },
         ),
       ],
@@ -95,7 +97,10 @@ class MyApp extends StatelessWidget {
           '/signup': (context) => const SignupScreen(),
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/home': (context) => const BottomNavScreen(),
+          // Add AppRoutes
+          ...AppRoutes.routes,
         },
+        onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );
   }

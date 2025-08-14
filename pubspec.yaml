@@ -38,6 +38,9 @@ dependencies:
   provider: ^6.1.5
   image_picker: ^1.1.2
   url_launcher: ^6.3.2
+  http: ^1.5.0
+  shared_preferences: ^2.5.3
+  get_it: ^8.2.0
 
 dev_dependencies:
   flutter_test:
