@@ -4,6 +4,7 @@ import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
 import 'package:naivedhya_delivery_app/provider/order_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
+import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/screens/app/onboarding_screen.dart';
 import 'package:naivedhya_delivery_app/screens/app/splash_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/forgot_password_screen.dart';
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => DeliveryProvider()),
         ChangeNotifierProvider(create: (_) => OrdersProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
         // Set up the sync callback after both providers are created
         ProxyProvider2<DeliveryProvider, OrdersProvider, void>(
           update: (context, deliveryProvider, ordersProvider, _) {
