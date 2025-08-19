@@ -3,6 +3,7 @@ import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/location_settings_screen.dart/location_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/notification_screen/notification_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen/personal_info_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/vehicle_detail_screen/vehicle_details_screen.dart';
@@ -231,7 +232,14 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.location_on_outlined,
               title: 'Location Settings',
               subtitle: 'Update location and privacy settings',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LocationSettingsScreen(), 
+                  ),
+                );
+              },
             ),
             _buildProfileOption(
               icon: Icons.language,

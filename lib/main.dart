@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/config/supabase_config.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
+import 'package:naivedhya_delivery_app/provider/location_settings_provider.dart';
 import 'package:naivedhya_delivery_app/provider/order_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DeliveryProvider()),
         ChangeNotifierProvider(create: (_) => OrdersProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
         // Set up the sync callback after both providers are created
         ProxyProvider2<DeliveryProvider, OrdersProvider, void>(
           update: (context, deliveryProvider, ordersProvider, _) {
