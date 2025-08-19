@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
+import 'package:naivedhya_delivery_app/screens/home/map_screen.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
 
@@ -306,92 +307,103 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                'View Map',
-                Icons.map_outlined,
-                AppColors.secondary,
-                () {
-                  // Navigate to map
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                'Support',
-                Icons.support_agent_outlined,
-                AppColors.primary,
-                () {
-                  // Open support
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                'Settings',
-                Icons.settings_outlined,
-                AppColors.textSecondary,
-                () {
-                  // Open settings
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withAlpha(26),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha(51)),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: color,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+  
+// Update the _buildQuickActions method in your HomeScreen
+Widget _buildQuickActions() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Quick Actions',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
         ),
       ),
-    );
-  }
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          Expanded(
+            child: _buildActionButton(
+              'View Map',
+              Icons.map_outlined,
+              AppColors.secondary,
+              () {
+                // Navigate to map
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MapScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildActionButton(
+              'Support',
+              Icons.support_agent_outlined,
+              AppColors.primary,
+              () {
+                // Open support
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildActionButton(
+              'Settings',
+              Icons.settings_outlined,
+              AppColors.textSecondary,
+              () {
+                // Open settings
+              },
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+  // Update the _buildActionButton for 'View Map' in your existing HomeScreen
+
+Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withAlpha(26),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(51)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 24,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 
   Widget _buildRecentOrders(DeliveryProvider deliveryProvider) {
     return Column(

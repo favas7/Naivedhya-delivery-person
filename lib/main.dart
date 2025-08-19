@@ -38,7 +38,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => DeliveryProvider()),
         ChangeNotifierProvider(create: (_) => OrdersProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
         // Set up the sync callback after both providers are created
         ProxyProvider2<DeliveryProvider, OrdersProvider, void>(
           update: (context, deliveryProvider, ordersProvider, _) {

@@ -206,7 +206,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
   }
 
   Widget _buildEarningsTab() {
-    return Padding(
+    return SingleChildScrollView(  // Added ScrollView to prevent overflow
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
@@ -348,6 +348,9 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
               ],
             ),
           ),
+          
+          // Add bottom padding to ensure content doesn't get cut off
+          const SizedBox(height: 20),
         ],
       ),
     );
