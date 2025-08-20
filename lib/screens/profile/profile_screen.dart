@@ -5,6 +5,7 @@ import 'package:naivedhya_delivery_app/provider/language_provider.dart';
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/help_faq_screen/help_and_faq.dart';
 import 'package:naivedhya_delivery_app/screens/profile/language_settings_screen/language_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/location_settings_screen.dart/location_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/notification_screen/notification_settings_screen.dart';
@@ -268,7 +269,14 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.help_outline,
               title: l10n.helpFaq,
               subtitle: l10n.helpFaqSubtitle,
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HelpFaqScreen(),
+                  ),
+                );
+              },
             ),
             _buildProfileOption(
               icon: Icons.support_agent,
