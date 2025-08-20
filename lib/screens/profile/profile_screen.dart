@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
-import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
+import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/location_settings_screen.dart/location_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/notification_screen/notification_settings_screen.dart';
@@ -221,7 +221,7 @@ class ProfileScreen extends StatelessWidget {
               subtitle: 'Manage your notification preferences',
               onTap: () {
                 Navigator.push(
-                  context,
+                  context, 
                   MaterialPageRoute(
                     builder: (context) => const NotificationSettingsScreen(),
                   ),

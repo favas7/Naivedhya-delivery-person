@@ -28,9 +28,11 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  app_settings: ^6.1.1
   cupertino_icons: ^1.0.8
   flutter:
     sdk: flutter
+  flutter_local_notifications: ^19.4.0
   geolocator: ^14.0.2
   get_it: ^8.2.0
   google_maps_flutter: ^2.12.3
