@@ -4,6 +4,7 @@ import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/language_provider.dart';
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
+import 'package:naivedhya_delivery_app/screens/profile/contact_support_screen/contact_support_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/help_faq_screen/help_and_faq.dart';
 import 'package:naivedhya_delivery_app/screens/profile/language_settings_screen/language_settings_screen.dart';
@@ -279,11 +280,18 @@ class ProfileScreen extends StatelessWidget {
               },
             ),
             _buildProfileOption(
-              icon: Icons.support_agent,
-              title: l10n.contactSupport,
-              subtitle: l10n.contactSupportSubtitle,
-              onTap: () {},
-            ),
+                icon: Icons.support_agent,
+                title: l10n.contactSupport,
+                subtitle: l10n.contactSupportSubtitle,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ContactSupportScreen(),
+                    ),
+                  );
+                },
+              ),
             _buildProfileOption(
               icon: Icons.info_outline,
               title: l10n.about,
