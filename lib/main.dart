@@ -9,12 +9,6 @@ import 'package:naivedhya_delivery_app/provider/location_settings_provider.dart'
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/provider/order_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
-import 'package:naivedhya_delivery_app/screens/app/onboarding_screen.dart';
-import 'package:naivedhya_delivery_app/screens/app/splash_screen.dart';
-import 'package:naivedhya_delivery_app/screens/auth/forgot_password_screen.dart';
-import 'package:naivedhya_delivery_app/screens/auth/login_screen.dart';
-import 'package:naivedhya_delivery_app/screens/auth/signup/signup_screen.dart';
-import 'package:naivedhya_delivery_app/screens/app/bottom_nav_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/widget/app_route_info.dart';
 import 'package:naivedhya_delivery_app/utils/app_colors.dart';
 import 'package:provider/provider.dart';
@@ -34,7 +28,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
+  @override 
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
@@ -63,7 +57,7 @@ class MyApp extends StatelessWidget {
             
             // Localization configuration
             locale: languageProvider.locale,
-            localizationsDelegates: [
+            localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
@@ -78,7 +72,7 @@ class MyApp extends StatelessWidget {
                 seedColor: AppColors.primary,
                 brightness: Brightness.light,
               ),
-              appBarTheme: AppBarTheme(
+              appBarTheme: const AppBarTheme(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
@@ -96,7 +90,7 @@ class MyApp extends StatelessWidget {
               inputDecorationTheme: InputDecorationTheme(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.secondary),
+                  borderSide: const BorderSide(color: AppColors.secondary),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -104,22 +98,28 @@ class MyApp extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
-            home: const SplashScreen(),
-            routes: {
-              '/onboarding': (context) => const OnboardingScreen(),
-              '/login': (context) => const LoginScreen(),
-              '/signup': (context) => const SignupScreen(),
-              '/forgot-password': (context) => const ForgotPasswordScreen(),
-              '/home': (context) => const BottomNavScreen(),
-              // Add AppRoutes
-              ...AppRoutes.routes,
-            },
+            
+            // Use centralized routing
+            initialRoute: AppRoutes.splash,
+            routes: AppRoutes.routes,
             onGenerateRoute: AppRoutes.onGenerateRoute,
+            
+            // Optional: Handle unknown routes
+            onUnknownRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => Scaffold(
+                  appBar: AppBar(title: const Text('Page Not Found')),
+                  body: const Center(
+                    child: Text('Page not found'),
+                  ),
+                ),
+              );
+            },
           );
         },
       ),

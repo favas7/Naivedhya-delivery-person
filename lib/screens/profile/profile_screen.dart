@@ -4,14 +4,7 @@ import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/language_provider.dart';
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
-import 'package:naivedhya_delivery_app/screens/profile/contact_support_screen/contact_support_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/help_faq_screen/help_and_faq.dart';
-import 'package:naivedhya_delivery_app/screens/profile/language_settings_screen/language_settings_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/location_settings_screen.dart/location_settings_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/notification_screen/notification_settings_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen/personal_info_screen.dart';
-import 'package:naivedhya_delivery_app/screens/profile/vehicle_detail_screen/vehicle_details_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/widget/app_route_info.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
 
@@ -182,40 +175,19 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.person_outline,
               title: l10n.personalInformation,
               subtitle: l10n.personalInfoSubtitle,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PersonalInformationScreen(),
-                  ),
-                );
-              },
-            ),
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.personalInformation),
+            ), 
             _buildProfileOption(
               icon: Icons.motorcycle,
               title: l10n.vehicleDetails,
               subtitle: l10n.vehicleDetailsSubtitle,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const VehicleDetailsScreen(),
-                  ),
-                );
-              },
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.vehicleDetails),
             ),
             _buildProfileOption(
               icon: Icons.credit_card,
               title: l10n.documents,
               subtitle: l10n.documentsSubtitle,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const DocumentsScreen(),
-                  ),
-                );
-              },
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.documents),
             ),
           ]),
           
@@ -226,40 +198,19 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.notifications_outlined,
               title: l10n.notifications,
               subtitle: l10n.notificationsSubtitle,
-              onTap: () {
-                Navigator.push(
-                  context, 
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationSettingsScreen(),
-                  ),
-                );
-              },
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.notificationSettings),
             ),
             _buildProfileOption(
               icon: Icons.location_on_outlined,
               title: l10n.locationSettings,
               subtitle: l10n.locationSettingsSubtitle,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LocationSettingsScreen(), 
-                  ),
-                );
-              },
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.locationSettings),
             ),
             _buildProfileOption(
               icon: Icons.language,
               title: l10n.language,
               subtitle: context.read<LanguageProvider>().getCurrentLanguageName(),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LanguageSettingsScreen(),
-                  ),
-                );
-              },
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.languageSettings),
             ),
           ]),
           
@@ -270,33 +221,19 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.help_outline,
               title: l10n.helpFaq,
               subtitle: l10n.helpFaqSubtitle,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HelpFaqScreen(),
-                  ),
-                );
-              },
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.helpFaq),
             ),
             _buildProfileOption(
                 icon: Icons.support_agent,
                 title: l10n.contactSupport,
                 subtitle: l10n.contactSupportSubtitle,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ContactSupportScreen(),
-                    ),
-                  );
-                },
+                onTap: () => AppRoutes.pushNamed(context, AppRoutes.contactSupport),
               ),
-            _buildProfileOption(
+            _buildProfileOption( 
               icon: Icons.info_outline,
               title: l10n.about,
               subtitle: l10n.aboutSubtitle,
-              onTap: () {},
+              onTap: () => AppRoutes.pushNamed(context, AppRoutes.about),
             ),
           ]),
           
@@ -440,7 +377,7 @@ class ProfileScreen extends StatelessWidget {
                 notificationProvider.clearNotificationData(); // Clear notification data on logout
                 
                 Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, '/login'); 
+                AppRoutes.goToLogin(context); // Use centralized navigation
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
