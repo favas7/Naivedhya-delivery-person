@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:naivedhya_delivery_app/l10n/app_localizations.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
+import 'package:naivedhya_delivery_app/provider/language_provider.dart';
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/screens/profile/document_screen/document_screen.dart';
+import 'package:naivedhya_delivery_app/screens/profile/language_settings_screen/language_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/location_settings_screen.dart/location_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/notification_screen/notification_settings_screen.dart';
 import 'package:naivedhya_delivery_app/screens/profile/personal_info_screen/personal_info_screen.dart';
@@ -14,29 +17,31 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(l10n.profile),
         elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // Profile Header
-            _buildProfileHeader(context),
+            _buildProfileHeader(context, l10n),
             
             const SizedBox(height: 20),
             
             // Profile Options
-            _buildProfileOptions(context),
+            _buildProfileOptions(context, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildProfileHeader(BuildContext context, AppLocalizations l10n) {
     return Consumer2<AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
         // Load user profile if not loaded
@@ -48,7 +53,7 @@ class ProfileScreen extends StatelessWidget {
 
         final profile = userProvider.userProfile;
         final userName = profile?['full_name'] ?? profile?['name'] ?? 
-                        authProvider.user?.email?.split('@')[0] ?? 'Delivery Partner';
+                        authProvider.user?.email?.split('@')[0] ?? l10n.deliveryPartner;
         final userEmail = profile?['email'] ?? authProvider.user?.email ?? 'deliverypartner@naivedhya.com';
         final earnings = profile?['earnings']?.toDouble() ?? 0.0;
         final isVerified = profile?['is_verified'] ?? false;
@@ -128,9 +133,9 @@ class ProfileScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatItem('4.8', 'Rating', Icons.star),
-                    _buildStatItem('156', 'Orders', Icons.assignment),
-                    _buildStatItem('₹${earnings.toStringAsFixed(0)}', 'Earned', Icons.currency_rupee),
+                    _buildStatItem('4.8', l10n.rating, Icons.star),
+                    _buildStatItem('156', l10n.orders, Icons.assignment),
+                    _buildStatItem('₹${earnings.toStringAsFixed(0)}', l10n.earned, Icons.currency_rupee),
                   ],
                 ),
               ],
@@ -165,16 +170,16 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileOptions(BuildContext context) {
+  Widget _buildProfileOptions(BuildContext context, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          _buildSection('Account', [
+          _buildSection(l10n.account, [
             _buildProfileOption(
               icon: Icons.person_outline,
-              title: 'Personal Information',
-              subtitle: 'Update your personal details',
+              title: l10n.personalInformation,
+              subtitle: l10n.personalInfoSubtitle,
               onTap: () {
                 Navigator.push(
                   context,
@@ -186,8 +191,8 @@ class ProfileScreen extends StatelessWidget {
             ),
             _buildProfileOption(
               icon: Icons.motorcycle,
-              title: 'Vehicle Details',
-              subtitle: 'Manage your vehicle information',
+              title: l10n.vehicleDetails,
+              subtitle: l10n.vehicleDetailsSubtitle,
               onTap: () {
                 Navigator.push(
                   context,
@@ -199,8 +204,8 @@ class ProfileScreen extends StatelessWidget {
             ),
             _buildProfileOption(
               icon: Icons.credit_card,
-              title: 'Documents',
-              subtitle: 'License, Aadhaar and other documents',
+              title: l10n.documents,
+              subtitle: l10n.documentsSubtitle,
               onTap: () {
                 Navigator.push(
                   context,
@@ -214,11 +219,11 @@ class ProfileScreen extends StatelessWidget {
           
           const SizedBox(height: 20),
           
-          _buildSection('Settings', [
+          _buildSection(l10n.settings, [
             _buildProfileOption(
               icon: Icons.notifications_outlined,
-              title: 'Notifications',
-              subtitle: 'Manage your notification preferences',
+              title: l10n.notifications,
+              subtitle: l10n.notificationsSubtitle,
               onTap: () {
                 Navigator.push(
                   context, 
@@ -230,8 +235,8 @@ class ProfileScreen extends StatelessWidget {
             ),
             _buildProfileOption(
               icon: Icons.location_on_outlined,
-              title: 'Location Settings',
-              subtitle: 'Update location and privacy settings',
+              title: l10n.locationSettings,
+              subtitle: l10n.locationSettingsSubtitle,
               onTap: () {
                 Navigator.push(
                   context,
@@ -243,31 +248,38 @@ class ProfileScreen extends StatelessWidget {
             ),
             _buildProfileOption(
               icon: Icons.language,
-              title: 'Language',
-              subtitle: 'English',
-              onTap: () {},
+              title: l10n.language,
+              subtitle: context.read<LanguageProvider>().getCurrentLanguageName(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LanguageSettingsScreen(),
+                  ),
+                );
+              },
             ),
           ]),
           
           const SizedBox(height: 20),
           
-          _buildSection('Support', [
+          _buildSection(l10n.support, [
             _buildProfileOption(
               icon: Icons.help_outline,
-              title: 'Help & FAQ',
-              subtitle: 'Get help and find answers',
+              title: l10n.helpFaq,
+              subtitle: l10n.helpFaqSubtitle,
               onTap: () {},
             ),
             _buildProfileOption(
               icon: Icons.support_agent,
-              title: 'Contact Support',
-              subtitle: '24/7 customer support',
+              title: l10n.contactSupport,
+              subtitle: l10n.contactSupportSubtitle,
               onTap: () {},
             ),
             _buildProfileOption(
               icon: Icons.info_outline,
-              title: 'About',
-              subtitle: 'App version and information',
+              title: l10n.about,
+              subtitle: l10n.aboutSubtitle,
               onTap: () {},
             ),
           ]),
@@ -280,7 +292,7 @@ class ProfileScreen extends StatelessWidget {
               return SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => _showLogoutDialog(context),
+                  onPressed: () => _showLogoutDialog(context, l10n),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error),
@@ -289,14 +301,14 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.logout, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.logout, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        'Logout',
-                        style: TextStyle(
+                        l10n.logout,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -389,17 +401,17 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: Text(l10n.logoutConfirmTitle),
+          content: Text(l10n.logoutConfirmMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -417,7 +429,7 @@ class ProfileScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
               ),
-              child: const Text('Logout'),
+              child: Text(l10n.logout),
             ),
           ],
         );
