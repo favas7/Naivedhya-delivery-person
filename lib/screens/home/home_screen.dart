@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
+import 'package:naivedhya_delivery_app/routes/app_route_info.dart';
 import 'package:naivedhya_delivery_app/screens/home/map_screen.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
@@ -309,6 +310,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   
 // Update the _buildQuickActions method in your HomeScreen
+// Replace the existing _buildQuickActions method with this updated version
+
 Widget _buildQuickActions() {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,20 +350,21 @@ Widget _buildQuickActions() {
               Icons.support_agent_outlined,
               AppColors.primary,
               () {
-                // Open support
+                // Navigate to contact support screen using AppRoutes
+                Navigator.pushNamed(context, AppRoutes.contactSupport);
               },
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          Expanded( 
             child: _buildActionButton(
               'Settings',
               Icons.settings_outlined,
               AppColors.textSecondary,
               () {
-                // Open settings
-              },
-            ),
+                Navigator.pushNamed(context, AppRoutes.settings1);
+                },
+            ), 
           ),
         ],
       ),

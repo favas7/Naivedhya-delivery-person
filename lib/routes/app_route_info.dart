@@ -11,6 +11,7 @@ import 'package:naivedhya_delivery_app/screens/app/bottom_nav_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/forgot_password_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/login_screen.dart';
 import 'package:naivedhya_delivery_app/screens/auth/signup/signup_screen.dart';
+import 'package:naivedhya_delivery_app/screens/home/settings_screen.dart';
 
 // Profile screens
 import 'package:naivedhya_delivery_app/screens/profile/about_screen/about_screen.dart';
@@ -36,6 +37,7 @@ class AppRoutes {
   
   // Profile routes
   static const String profile = '/profile';
+  static const String settings1 = '/settings';
   static const String personalInformation = '/profile/personal-information';
   static const String vehicleDetails = '/profile/vehicle-details';
   static const String documents = '/profile/documents';
@@ -45,7 +47,7 @@ class AppRoutes {
   static const String helpFaq = '/profile/help-faq';
   static const String contactSupport = '/profile/contact-support';
   static const String about = '/profile/about';
-
+ 
   // Static routes map for simple navigation
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const SplashScreen(),
@@ -54,6 +56,7 @@ class AppRoutes {
     signup: (context) => const SignupScreen(),
     forgotPassword: (context) => const ForgotPasswordScreen(),
     home: (context) => const BottomNavScreen(),
+    settings1: (context) => const SettingsScreen(),
     personalInformation: (context) => const PersonalInformationScreen(),
     vehicleDetails: (context) => const VehicleDetailsScreen(),
     documents: (context) => const DocumentsScreen(),
@@ -90,6 +93,9 @@ class AppRoutes {
         
       case home:
         return _createRoute(const BottomNavScreen(), settings);
+        
+      case settings1:
+        return _createRoute(const SettingsScreen(), settings);
         
       // Profile routes
       case personalInformation:
@@ -254,4 +260,8 @@ class AppRoutes {
   static Future<void> goToOnboarding(BuildContext context) {
     return pushReplacementNamed(context, onboarding);
   }
-}
+
+  static Future<void> goToSettings(BuildContext context) {
+    return pushNamed(context, settings1);
+  }
+} 
