@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:naivedhya_delivery_app/config/supabase_config.dart';
-import 'package:naivedhya_delivery_app/l10n/app_localizations.dart';
+import 'package:naivedhya_delivery_app/utils/l10n/app_localizations.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
 import 'package:naivedhya_delivery_app/provider/language_provider.dart';
@@ -9,7 +9,7 @@ import 'package:naivedhya_delivery_app/provider/location_settings_provider.dart'
 import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/provider/order_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
-import 'package:naivedhya_delivery_app/routes/app_route_info.dart';
+import 'package:naivedhya_delivery_app/utils/routes/app_route_info.dart';
 import 'package:naivedhya_delivery_app/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,7 +17,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await Supabase.initialize(
+   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
