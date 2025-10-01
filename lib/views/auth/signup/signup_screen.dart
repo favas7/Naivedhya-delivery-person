@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
-import 'package:naivedhya_delivery_app/views/auth/login_screen.dart';
+import 'package:naivedhya_delivery_app/views/auth/login/login_screen.dart';
 import 'package:naivedhya_delivery_app/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'signup_form_data.dart';

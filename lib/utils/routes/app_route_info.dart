@@ -8,21 +8,21 @@ import 'package:naivedhya_delivery_app/views/app/splash_screen.dart';
 import 'package:naivedhya_delivery_app/views/app/bottom_nav_screen.dart';
 
 // Auth screens
-import 'package:naivedhya_delivery_app/views/auth/forgot_password_screen.dart';
-import 'package:naivedhya_delivery_app/views/auth/login_screen.dart';
+import 'package:naivedhya_delivery_app/views/auth/forgotpass/forgot_password_screen.dart';
+import 'package:naivedhya_delivery_app/views/auth/login/login_screen.dart';
 import 'package:naivedhya_delivery_app/views/auth/signup/signup_screen.dart';
-import 'package:naivedhya_delivery_app/views/home/settings_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/home/settings_screen.dart';
 
 // Profile screens
-import 'package:naivedhya_delivery_app/views/profile/about_screen/about_screen.dart';
-import 'package:naivedhya_delivery_app/views/profile/contact_support_screen/contact_support_screen.dart';
-import 'package:naivedhya_delivery_app/views/profile/document_screen/document_screen.dart';
-import 'package:naivedhya_delivery_app/views/profile/help_faq_screen/help_and_faq.dart';
-import 'package:naivedhya_delivery_app/views/profile/language_settings_screen/language_settings_screen.dart';
-import 'package:naivedhya_delivery_app/views/profile/location_settings_screen.dart/location_settings_screen.dart';
-import 'package:naivedhya_delivery_app/views/profile/notification_screen/notification_settings_screen.dart';
-import 'package:naivedhya_delivery_app/views/profile/personal_info_screen/personal_info_screen.dart';
-import 'package:naivedhya_delivery_app/views/profile/vehicle_detail_screen/vehicle_details_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/about_screen/about_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/contact_support_screen/contact_support_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/document_screen/document_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/help_faq_screen/help_and_faq.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/language_settings_screen/language_settings_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/location_settings_screen.dart/location_settings_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/notification_screen/notification_settings_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/personal_info_screen/personal_info_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/profile/vehicle_detail_screen/vehicle_details_screen.dart';
 
 class AppRoutes {
   // App routes

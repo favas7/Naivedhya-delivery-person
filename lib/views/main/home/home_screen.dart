@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
 import 'package:naivedhya_delivery_app/utils/routes/app_route_info.dart';
-import 'package:naivedhya_delivery_app/views/home/map_screen.dart';
+import 'package:naivedhya_delivery_app/views/main/home/map_screen.dart';
 import 'package:provider/provider.dart';
-import '../../utils/app_colors.dart';
+import '../../../utils/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

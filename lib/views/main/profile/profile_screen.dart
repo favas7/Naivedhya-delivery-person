@@ -6,7 +6,7 @@ import 'package:naivedhya_delivery_app/provider/notification_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/utils/routes/app_route_info.dart';
 import 'package:provider/provider.dart';
-import '../../utils/app_colors.dart';
+import '../../../utils/app_colors.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
