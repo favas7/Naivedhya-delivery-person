@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
+import 'package:naivedhya_delivery_app/screens/auth/login_screen.dart';
 import 'package:naivedhya_delivery_app/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'signup_form_data.dart';
@@ -29,6 +30,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _formData.dispose();
     super.dispose();
   }
@@ -54,12 +56,15 @@ class _SignupScreenState extends State<SignupScreen> {
         String errorMessage = 'Failed to create account';
         
         // Try different possible error property names
-        if (authProvider.runtimeType.toString().contains('errorMessage')) {
-          // If AuthProvider has errorMessage property
-          errorMessage = (authProvider as dynamic).errorMessage ?? errorMessage;
-        } else if (authProvider.runtimeType.toString().contains('error')) {
-          // If AuthProvider has error property
-          errorMessage = (authProvider as dynamic).error ?? errorMessage;
+        try {
+          final dynamic provider = authProvider;
+          if (provider.runtimeType.toString().contains('errorMessage')) {
+            errorMessage = provider.errorMessage ?? errorMessage;
+          } else if (provider.runtimeType.toString().contains('error')) {
+            errorMessage = provider.error ?? errorMessage;
+          }
+        } catch (e) {
+          // If accessing error properties fails, use default message
         }
 
         if (mounted) {
@@ -136,7 +141,6 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Add this to handle keyboard properly
       resizeToAvoidBottomInset: true,
       body: Container(
         decoration: const BoxDecoration(
@@ -151,14 +155,12 @@ class _SignupScreenState extends State<SignupScreen> {
               // Progress indicator
               _buildProgressIndicator(),
               
-              // Form content - FIXED: Disable PageView physics when keyboard is open
+              // Form content
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  // CRITICAL FIX: Disable swiping to prevent keyboard conflicts
                   physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (index) {
-                    // Unfocus any active text field when page changes
                     FocusScope.of(context).unfocus();
                     setState(() {
                       _currentStep = index;
@@ -189,11 +191,13 @@ class _SignupScreenState extends State<SignupScreen> {
         children: [
           Row(
             children: [
-              IconButton(
+              IconButton(   
                 onPressed: () {
-                  // Unfocus before navigating back
                   FocusScope.of(context).unfocus();
-                  Navigator.pop(context);
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (context) => const LoginScreen())
+                  );
                 },
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
               ),
@@ -253,7 +257,6 @@ class _SignupScreenState extends State<SignupScreen> {
             Expanded(
               child: OutlinedButton(
                 onPressed: () {
-                  // Unfocus before navigation
                   FocusScope.of(context).unfocus();
                   _goToPreviousStep();
                 },
@@ -278,7 +281,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 
                 return ElevatedButton(
                   onPressed: isLoading ? null : () {
-                    // Unfocus before proceeding
                     FocusScope.of(context).unfocus();
                     if (_currentStep == _totalSteps - 1) {
                       _handleSignup();
@@ -295,7 +297,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: isLoading
-                      ? const CircularProgressIndicator()
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : Text(_currentStep == _totalSteps - 1 ? 'Create Account' : 'Next'),
                 );
               },
