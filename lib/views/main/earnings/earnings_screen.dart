@@ -143,7 +143,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
           const SizedBox(height: 8),
           
           const Text(
-            '₹1,250.50',
+            '₹0.00',
             style: TextStyle(
               color: Colors.white,
               fontSize: 36,
@@ -156,7 +156,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
           Row(
             children: [
               Expanded(
-                child: _buildSummaryItem('Orders', '12', Icons.assignment),
+                child: _buildSummaryItem('Orders', '0', Icons.assignment),
               ),
               Container(
                 height: 40,
@@ -164,7 +164,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
                 color: Colors.white30,
               ),
               Expanded(
-                child: _buildSummaryItem('Online Time', '8.5h', Icons.access_time),
+                child: _buildSummaryItem('Online Time', '0h', Icons.access_time),
               ),
               Container(
                 height: 40,
@@ -172,7 +172,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
                 color: Colors.white30,
               ),
               Expanded(
-                child: _buildSummaryItem('Avg/Order', '₹104', Icons.trending_up),
+                child: _buildSummaryItem('Avg/Order', '₹0', Icons.trending_up),
               ),
             ],
           ),
@@ -206,7 +206,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
   }
 
   Widget _buildEarningsTab() {
-    return SingleChildScrollView(  // Added ScrollView to prevent overflow
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
@@ -216,7 +216,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
               Expanded(
                 child: _buildBreakdownCard(
                   'Base Earnings',
-                  '₹980.00',
+                  '₹0.00',
                   Icons.attach_money,
                   AppColors.success,
                 ),
@@ -225,7 +225,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
               Expanded(
                 child: _buildBreakdownCard(
                   'Tips',
-                  '₹150.50',
+                  '₹0.00',
                   Icons.favorite,
                   AppColors.accent,
                 ),
@@ -240,7 +240,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
               Expanded(
                 child: _buildBreakdownCard(
                   'Bonuses',
-                  '₹120.00',
+                  '₹0.00',
                   Icons.star,
                   AppColors.warning,
                 ),
@@ -309,7 +309,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
                 const SizedBox(height: 12),
                 
                 const Text(
-                  '₹1,250.50',
+                  '₹0.00',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -320,7 +320,7 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
                 const SizedBox(height: 4),
                 
                 const Text(
-                  'Payout date: Monday, March 18, 2024',
+                  'No upcoming payout',
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14,
@@ -349,7 +349,6 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
             ),
           ),
           
-          // Add bottom padding to ensure content doesn't get cut off
           const SizedBox(height: 20),
         ],
       ),
@@ -408,168 +407,33 @@ class _EarningsScreenState extends State<EarningsScreen> with SingleTickerProvid
   }
 
   Widget _buildHistoryTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return _buildHistoryItem(
-          date: 'March ${15 - index}, 2024',
-          orderId: '#ORD${5000 + index}',
-          customerName: 'Customer ${index + 1}',
-          amount: '₹${(index + 1) * 95 + 50}',
-          status: index < 3 ? 'Completed' : (index < 7 ? 'Paid' : 'Processing'),
-          time: '${index + 1}:${(index * 15) % 60} PM',
-        );
-      },
-    );
-  }
-
-  Widget _buildHistoryItem({
-    required String date,
-    required String orderId,
-    required String customerName,
-    required String amount,
-    required String status,
-    required String time,
-  }) {
-    Color statusColor;
-    IconData statusIcon;
-    
-    switch (status) {
-      case 'Completed':
-        statusColor = AppColors.success;
-        statusIcon = Icons.check_circle;
-        break;
-      case 'Paid':
-        statusColor = AppColors.primary;
-        statusIcon = Icons.account_balance_wallet;
-        break;
-      default:
-        statusColor = AppColors.warning;
-        statusIcon = Icons.schedule;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
+    // Empty history - show a message
+    return Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                date,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withAlpha(0),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(statusIcon, size: 12, color: statusColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      status,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 64,
+            color: AppColors.textSecondary.withAlpha((0.5 * 255).round()),
           ),
-          
-          const SizedBox(height: 8),
-          
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      orderId,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      customerName,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    amount,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    time,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          
-          if (status == 'Processing') ...[
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: AppColors.warning,
-                ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Payment processing, will be credited within 2-3 days',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 16),
+          const Text(
+            'No Earnings History',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
             ),
-          ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Your earning history will appear here',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );

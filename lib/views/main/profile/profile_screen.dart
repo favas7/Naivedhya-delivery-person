@@ -19,125 +19,211 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.profile),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              final userProvider = context.read<UserProvider>();
+              final authProvider = context.read<AuthProvider>();
+              if (authProvider.user != null) {
+                userProvider.getUserProfile(authProvider.user!.id);
+              }
+            },
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Profile Header
-            _buildProfileHeader(context, l10n),
-            
-            const SizedBox(height: 20),
-            
-            // Profile Options
-            _buildProfileOptions(context, l10n),
-          ],
-        ),
+      body: Consumer2<AuthProvider, UserProvider>(
+        builder: (context, authProvider, userProvider, child) {
+          // Load user profile if not loaded
+          if (authProvider.user != null && userProvider.userProfile == null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              userProvider.getUserProfile(authProvider.user!.id);
+            });
+          }
+
+          // Show loading indicator
+          if (userProvider.isLoading && userProvider.userProfile == null) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          // Show error if any
+          if (userProvider.errorMessage != null && userProvider.userProfile == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      userProvider.errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.error),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (authProvider.user != null) {
+                        userProvider.getUserProfile(authProvider.user!.id);
+                      }
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                // Profile Header
+                _buildProfileHeader(context, l10n, userProvider, authProvider),
+                
+                const SizedBox(height: 20),
+                
+                // Profile Options
+                _buildProfileOptions(context, l10n),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, AppLocalizations l10n) {
-    return Consumer2<AuthProvider, UserProvider>(
-      builder: (context, authProvider, userProvider, child) {
-        // Load user profile if not loaded
-        if (authProvider.user != null && userProvider.userProfile == null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            userProvider.getUserProfile(authProvider.user!.id);
-          });
-        }
-
-        final profile = userProvider.userProfile;
-        final userName = profile?['full_name'] ?? profile?['name'] ?? 
-                        authProvider.user?.email?.split('@')[0] ?? l10n.deliveryPartner;
-        final userEmail = profile?['email'] ?? authProvider.user?.email ?? 'deliverypartner@naivedhya.com';
-        final earnings = profile?['earnings']?.toDouble() ?? 0.0;
-        final isVerified = profile?['is_verified'] ?? false;
-
-        return Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
+  Widget _buildProfileHeader(
+    BuildContext context, 
+    AppLocalizations l10n,
+    UserProvider userProvider,
+    AuthProvider authProvider,
+  ) {
+    final profile = userProvider.userProfile;
+    final stats = userProvider.userStats;
+    
+    final userName = profile?['full_name'] ?? 
+                     profile?['name'] ?? 
+                     authProvider.user?.email?.split('@')[0] ?? 
+                     l10n.deliveryPartner;
+    
+    final userEmail = profile?['email'] ?? 
+                      authProvider.user?.email ?? 
+                      'deliverypartner@naivedhya.com';
+    
+    final earnings = (profile?['earnings'] ?? 0.0).toDouble();
+    final rating = (profile?['rating'] ?? 0.0).toDouble();
+    final isVerified = profile?['is_verified'] ?? false;
+    
+    // Get stats - use database count for orders
+    final totalOrders = stats?['total_orders'] ?? 0;
+    
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // Avatar
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(50),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.person,
+                size: 50,
+                color: AppColors.primary,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
+            
+            const SizedBox(height: 16),
+            
+            // User Info
+            Text(
+              userName,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Avatar
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(50),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(0),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 50,
-                    color: AppColors.primary,
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // User Info
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                
-                const SizedBox(height: 8),
-                
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      userEmail,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                Flexible(
+                  child: Text(
+                    userEmail,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
                     ),
-                    const SizedBox(width: 8),
-                    if (isVerified)
-                      const Icon(
-                        Icons.verified,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // Stats Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildStatItem('4.8', l10n.rating, Icons.star),
-                    _buildStatItem('156', l10n.orders, Icons.assignment),
-                    _buildStatItem('₹${earnings.toStringAsFixed(0)}', l10n.earned, Icons.currency_rupee),
-                  ],
+                const SizedBox(width: 8),
+                if (isVerified)
+                  const Icon(
+                    Icons.verified,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Stats Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatItem(
+                  rating > 0 ? rating.toStringAsFixed(1) : '0.0',
+                  l10n.rating,
+                  Icons.star,
+                ),
+                _buildStatItem(
+                  totalOrders.toString(),
+                  l10n.orders,
+                  Icons.assignment,
+                ),
+                _buildStatItem(
+                  '₹${earnings.toStringAsFixed(0)}',
+                  l10n.earned,
+                  Icons.currency_rupee,
                 ),
               ],
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
@@ -224,11 +310,11 @@ class ProfileScreen extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, AppRoutes.helpFaq),
             ),
             _buildProfileOption(
-                icon: Icons.support_agent,
-                title: l10n.contactSupport,
-                subtitle: l10n.contactSupportSubtitle,
-                onTap: () => Navigator.pushNamed(context, AppRoutes.contactSupport),
-              ),
+              icon: Icons.support_agent,
+              title: l10n.contactSupport,
+              subtitle: l10n.contactSupportSubtitle,
+              onTap: () => Navigator.pushNamed(context, AppRoutes.contactSupport),
+            ),
             _buildProfileOption( 
               icon: Icons.info_outline,
               title: l10n.about,
@@ -300,7 +386,7 @@ class ProfileScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(0),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -322,7 +408,7 @@ class ProfileScreen extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.primary.withAlpha(0),
+          color: AppColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -363,7 +449,7 @@ class ProfileScreen extends StatelessWidget {
           content: Text(l10n.logoutConfirmMessage),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context).pop(), 
               child: Text(l10n.cancel),
             ),
             ElevatedButton(
@@ -373,11 +459,13 @@ class ProfileScreen extends StatelessWidget {
                 final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
                 
                 await authProvider.signOut();
-                userProvider.clearUserData(); // Clear user data on logout
-                notificationProvider.clearNotificationData(); // Clear notification data on logout
+                userProvider.clearUserData();
+                notificationProvider.clearNotificationData();
                 
-                Navigator.of(context).pop();
-                AppRoutes.goToLogin(context); // Use centralized navigation
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                  AppRoutes.goToLogin(context);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
