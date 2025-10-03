@@ -11,16 +11,35 @@ import 'package:naivedhya_delivery_app/provider/order_provider.dart';
 import 'package:naivedhya_delivery_app/provider/user_provider.dart';
 import 'package:naivedhya_delivery_app/utils/routes/app_route_info.dart';
 import 'package:naivedhya_delivery_app/utils/app_colors.dart';
+import 'package:naivedhya_delivery_app/utils/connectivity_checker.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-   await Supabase.initialize(
-    url: SupabaseConfig.supabaseUrl,
-    anonKey: SupabaseConfig.supabaseAnonKey,
-  );
+  try {
+    // Check connectivity before initializing Supabase
+    final connectivityChecker = ConnectivityChecker();
+    final hasConnection = await connectivityChecker.hasConnectionQuick();
+    
+    if (!hasConnection) {
+      debugPrint('⚠️ No internet connection detected during app initialization');
+
+    }
+    
+    // Initialize Supabase with error handling
+    await Supabase.initialize(
+      url: SupabaseConfig.supabaseUrl,
+      anonKey: SupabaseConfig.supabaseAnonKey,
+    );
+    
+    debugPrint('✅ Supabase initialized successfully');
+  } catch (e) {
+    // Log the error but don't crash the app
+    debugPrint('❌ Error initializing Supabase: $e');
+    // App will continue, errors will be handled by individual providers
+  }
 
   runApp(const MyApp());
 } 

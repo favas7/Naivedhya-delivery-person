@@ -34,7 +34,7 @@ class OrdersDataService {
             delivery_time,
             created_at,
             updated_at,
-            hotels!inner(
+            restaurant!inner(
               name,
               address
             ),
@@ -70,7 +70,7 @@ class OrdersDataService {
             delivery_location,
             proposed_delivery_time,
             created_at,
-            hotels!inner(
+            restaurant!inner(
               name,
               address
             )
@@ -179,7 +179,7 @@ class OrdersDataService {
             delivery_time,
             created_at,
             updated_at,
-            hotels!inner(
+            restaurant!inner(
               name,
               address
             ),
@@ -325,14 +325,14 @@ class OrdersDataService {
     }
   }
 
-  // Get pickup address from hotels
+  // Get pickup address from restaurant (UPDATED: changed from hotels to restaurant)
   String getPickupAddress(Map<String, dynamic> orderData) {
     try {
-      if (orderData['hotels'] != null && 
-          orderData['hotels'] is List && 
-          orderData['hotels'].isNotEmpty) {
-        final hotel = orderData['hotels'][0];
-        return '${hotel['name']}, ${hotel['address']}';
+      if (orderData['restaurant'] != null && 
+          orderData['restaurant'] is List && 
+          orderData['restaurant'].isNotEmpty) {
+        final restaurant = orderData['restaurant'][0];
+        return '${restaurant['name']}, ${restaurant['address']}';
       }
       return 'N/A';
     } catch (e) {

@@ -1,14 +1,19 @@
+// File: lib/provider/delivery_provider.dart (UPDATED)
+
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/service/delivery_data_service.dart';
+import 'package:naivedhya_delivery_app/utils/connectivity_checker.dart';
+import 'package:naivedhya_delivery_app/utils/error_type.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DeliveryProvider with ChangeNotifier {
   final DeliveryDataService _dataService = DeliveryDataService();
+  final ConnectivityChecker _connectivityChecker = ConnectivityChecker();
   
   // Delivery personnel data
   Map<String, dynamic>? _deliveryPersonnelData;
   bool _isLoading = false;
-  String? _errorMessage;
+  AppError? _error; // Changed from String? to AppError?
   
   // Stats data
   int _todaysOrdersCount = 0;
@@ -22,7 +27,8 @@ class DeliveryProvider with ChangeNotifier {
   // Getters
   Map<String, dynamic>? get deliveryPersonnelData => _deliveryPersonnelData;
   bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
+  AppError? get error => _error; // Changed getter
+  String? get errorMessage => _error?.message; // Keep for backward compatibility
   int get todaysOrdersCount => _todaysOrdersCount;
   double get todaysEarnings => _todaysEarnings;
   List<Map<String, dynamic>> get recentOrders => _recentOrders;
@@ -34,8 +40,8 @@ class DeliveryProvider with ChangeNotifier {
     notifyListeners();
   }
   
-  void _setError(String? error) {
-    _errorMessage = error;
+  void _setError(AppError? error) {
+    _error = error;
     notifyListeners();
   }
   
@@ -44,6 +50,17 @@ class DeliveryProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _setError(null);
+      
+      // Check connectivity first
+      final hasConnection = await _connectivityChecker.hasConnection();
+      if (!hasConnection) {
+        _setError(AppError(
+          type: ErrorType.network,
+          message: 'No internet connection. Please check your network and try again.',
+        ));
+        _setLoading(false);
+        return;
+      }
       
       // Fetch delivery personnel data
       final personnelData = await _dataService.getDeliveryPersonnelData(userId);
@@ -56,10 +73,23 @@ class DeliveryProvider with ChangeNotifier {
         // Setup real-time subscriptions
         _setupRealtimeSubscriptions(userId);
       } else {
-        _setError('Delivery personnel data not found');
+        _setError(AppError(
+          type: ErrorType.unknown,
+          message: 'Delivery personnel data not found',
+        ));
       }
     } catch (e) {
-      _setError('Error initializing delivery data: $e');
+      // Check connectivity again on error
+      final hasConnection = await _connectivityChecker.hasConnection();
+      if (!hasConnection) {
+        _setError(AppError(
+          type: ErrorType.network,
+          message: 'No internet connection. Please check your network and try again.',
+          technicalMessage: e.toString(),
+        ));
+      } else {
+        _setError(AppError.fromException(e));
+      }
     } finally {
       _setLoading(false);
     }
@@ -68,6 +98,12 @@ class DeliveryProvider with ChangeNotifier {
   // Fetch stats data (orders count, earnings, recent orders)
   Future<void> _fetchStatsData(String userId) async {
     try {
+      // Check connectivity
+      final hasConnection = await _connectivityChecker.hasConnection();
+      if (!hasConnection) {
+        throw Exception('No internet connection');
+      }
+      
       // Get today's orders count
       _todaysOrdersCount = await _dataService.getTodaysOrdersCount(userId);
       
@@ -80,6 +116,7 @@ class DeliveryProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('Error fetching stats data: $e');
+      // Don't set error here as this is called internally
     }
   }
   
@@ -107,6 +144,16 @@ class DeliveryProvider with ChangeNotifier {
   // Toggle availability status
   Future<bool> toggleAvailability(String userId) async {
     try {
+      // Check connectivity
+      final hasConnection = await _connectivityChecker.hasConnection();
+      if (!hasConnection) {
+        _setError(AppError(
+          type: ErrorType.network,
+          message: 'No internet connection. Please check your network and try again.',
+        ));
+        return false;
+      }
+      
       final newStatus = !isAvailable;
       final success = await _dataService.updateAvailabilityStatus(userId, newStatus);
       
@@ -117,14 +164,28 @@ class DeliveryProvider with ChangeNotifier {
       }
       return false;
     } catch (e) {
-      _setError('Error updating availability: $e');
+      _setError(AppError.fromException(e));
       return false;
     }
   }
   
   // Refresh all data
   Future<void> refreshData(String userId) async {
-    await _fetchStatsData(userId);
+    try {
+      // Check connectivity
+      final hasConnection = await _connectivityChecker.hasConnection();
+      if (!hasConnection) {
+        _setError(AppError(
+          type: ErrorType.network,
+          message: 'No internet connection. Please check your network and try again.',
+        ));
+        return;
+      }
+      
+      await _fetchStatsData(userId);
+    } catch (e) {
+      _setError(AppError.fromException(e));
+    }
   }
   
   // Method to be called when orders are updated from OrdersProvider
@@ -134,7 +195,7 @@ class DeliveryProvider with ChangeNotifier {
   
   // Clear error message
   void clearError() {
-    _errorMessage = null;
+    _error = null;
     notifyListeners();
   }
   

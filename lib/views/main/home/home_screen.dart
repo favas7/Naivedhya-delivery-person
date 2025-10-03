@@ -1,8 +1,13 @@
+// File: lib/views/main/home/home_screen.dart (UPDATED)
+// Only showing the updated error handling part - keep rest of your code
+
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
 import 'package:naivedhya_delivery_app/utils/routes/app_route_info.dart';
 import 'package:naivedhya_delivery_app/views/main/home/map_screen.dart';
+import 'package:naivedhya_delivery_app/utils/error_type.dart';
+import 'package:naivedhya_delivery_app/views/main/widgets/error_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../utils/app_colors.dart';
 
@@ -31,6 +36,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _handleAuthError() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // Clear session and navigate to login
+    authProvider.signOut();
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.login, // Make sure you have this route defined
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,43 +59,28 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
 
-            if (deliveryProvider.errorMessage != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red[300],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error loading data',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      deliveryProvider.errorMessage!,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        deliveryProvider.clearError();
-                        _initializeData();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+            // UPDATED ERROR HANDLING - Shows different screens based on error type
+            if (deliveryProvider.error != null) {
+              final error = deliveryProvider.error!; // Store error in variable
+              return ErrorScreen(
+                errorType: error.type,
+                message: error.message,
+                onRetry: () {
+                  deliveryProvider.clearError(); 
+                  // For auth errors, redirect to login
+                  if (error.type == ErrorType.authentication) {
+                    _handleAuthError();
+                  } else {
+                    _initializeData();
+                  }
+                },
+                onSecondaryAction: deliveryProvider.error!.type == ErrorType.authentication 
+                  ? null 
+                  : () {
+                    // Optional: Navigate back or to another screen
+                    Navigator.pop(context);
+                  },
+                secondaryActionLabel: 'Go Back',
               );
             }
 
@@ -126,6 +127,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  // ... REST OF YOUR CODE REMAINS THE SAME ...
+  // (Keep all your existing _buildHeader, _buildStatusToggle, _buildStatsCards, etc. methods)
 
   Widget _buildHeader(DeliveryProvider deliveryProvider) {
     return Row(
@@ -308,106 +312,97 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
-// Update the _buildQuickActions method in your HomeScreen
-// Replace the existing _buildQuickActions method with this updated version
+  Widget _buildQuickActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
+                'View Map',
+                Icons.map_outlined,
+                AppColors.secondary,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MapScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionButton(
+                'Support',
+                Icons.support_agent_outlined,
+                AppColors.primary,
+                () {
+                  Navigator.pushNamed(context, AppRoutes.contactSupport);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded( 
+              child: _buildActionButton(
+                'Settings',
+                Icons.settings_outlined,
+                AppColors.textSecondary,
+                () {
+                  Navigator.pushNamed(context, AppRoutes.settings1);
+                },
+              ), 
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 
-Widget _buildQuickActions() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Quick Actions',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+  Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withAlpha(26),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withAlpha(51)),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
-      const SizedBox(height: 16),
-      Row(
-        children: [
-          Expanded(
-            child: _buildActionButton(
-              'View Map',
-              Icons.map_outlined,
-              AppColors.secondary,
-              () {
-                // Navigate to map
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MapScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildActionButton(
-              'Support',
-              Icons.support_agent_outlined,
-              AppColors.primary,
-              () {
-                // Navigate to contact support screen using AppRoutes
-                Navigator.pushNamed(context, AppRoutes.contactSupport);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded( 
-            child: _buildActionButton(
-              'Settings',
-              Icons.settings_outlined,
-              AppColors.textSecondary,
-              () {
-                Navigator.pushNamed(context, AppRoutes.settings1);
-                },
-            ), 
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
-  // Update the _buildActionButton for 'View Map' in your existing HomeScreen
-
-Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
-  return InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    child: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withAlpha(26),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withAlpha(51)),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildRecentOrders(DeliveryProvider deliveryProvider) {
     return Column(

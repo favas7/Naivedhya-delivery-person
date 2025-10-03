@@ -28,6 +28,7 @@ dependencies:
   supabase_flutter: ^2.9.1
   url_launcher: ^6.3.2
   intl: any
+  connectivity_plus: ^7.0.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
