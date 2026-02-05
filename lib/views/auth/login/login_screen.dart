@@ -27,6 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width, 
         decoration: const BoxDecoration(
           gradient: AppColors.primaryGradient,
         ),
@@ -38,16 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 40),
                 
-                // Back button
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
-                ),
+                // // Back button
+                // Align(
+                //   alignment: Alignment.centerLeft,
+                //   child: IconButton(
+                //     onPressed: () => Navigator.pop(context),
+                //     icon: const Icon(Icons.arrow_back, color: Colors.white),
+                //   ),
+                // ),
                 
-                const SizedBox(height: 20),
+                // const SizedBox(height: 20),
                 
                 // Header
                 const Text(
