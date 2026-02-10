@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrdersDataService {
@@ -34,6 +35,8 @@ class OrdersDataService {
             delivery_time,
             created_at,
             updated_at,
+            order_items,
+            delivery_address,
             restaurant!inner(
               name,
               address
@@ -41,13 +44,60 @@ class OrdersDataService {
             profiles!inner(
               name,
               phone
+            ),
+            addresses!orders_delivery_address_fkey(
+              addressid,
+              fulladdress,
+              label
             )
           ''')
           .eq('delivery_person_id', deliveryPersonId)
           .inFilter('delivery_status', [deliveryStatusAssigned, deliveryStatusPickedUp, deliveryStatusInTransit])
           .order('created_at', ascending: false);
 
-      return List<Map<String, dynamic>>.from(response);
+      print('===== ACTIVE ORDERS RESPONSE =====');
+      print('Response: $response');
+      
+      // Post-process to add location coordinates using RPC
+      final List<Map<String, dynamic>> ordersWithCoords = [];
+      
+      for (final order in response) {
+        final orderMap = Map<String, dynamic>.from(order);
+        print('Processing order: ${orderMap['order_number']}');
+        print('Delivery address: ${orderMap['delivery_address']}');
+        
+        // Get coordinates using PostGIS ST_AsText function
+        if (orderMap['delivery_address'] != null) {
+          try {
+            print('Calling RPC for address: ${orderMap['delivery_address']}');
+            final coordResponse = await _supabase
+                .rpc('get_address_coordinates', 
+                  params: {'address_id': orderMap['delivery_address']});
+            
+            print('RPC Response: $coordResponse');
+            
+            if (coordResponse != null) {
+              // Add coordinates to addresses object
+              if (orderMap['addresses'] != null && orderMap['addresses'] is Map) {
+                final addressMap = Map<String, dynamic>.from(orderMap['addresses']);
+                addressMap['latitude'] = coordResponse['latitude'];
+                addressMap['longitude'] = coordResponse['longitude'];
+                orderMap['addresses'] = addressMap;
+                print('Updated addresses: ${orderMap['addresses']}');
+              }
+            }
+          } catch (e) {
+            print('Error fetching coordinates for order ${orderMap['order_number']}: $e');
+          }
+        }
+        
+        ordersWithCoords.add(orderMap);
+      }
+      
+      print('Final orders with coords: $ordersWithCoords');
+      print('=====================================');
+
+      return ordersWithCoords;
     } catch (e) {
       print('Error fetching active orders: $e');
       return [];
@@ -87,31 +137,85 @@ class OrdersDataService {
     }
   }
 
-  // Get completed orders for delivery person
-  Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) async {
-    try {
-      final response = await _supabase
-          .from('orders')
-          .select('''
-            order_id,
-            order_number,
-            customer_name,
-            total_amount,
-            delivery_status,
-            delivery_time,
-            created_at
-          ''')
-          .eq('delivery_person_id', deliveryPersonId)
-          .eq('delivery_status', deliveryStatusDelivered)
-          .order('delivery_time', ascending: false)
-          .limit(50); // Limit to last 50 completed orders
 
-      return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      print('Error fetching completed orders: $e');
-      return [];
+// Get completed orders for delivery person
+Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) async {
+  try {
+    final response = await _supabase
+        .from('orders')
+        .select('''
+          order_id,
+          order_number,
+          customer_name,
+          total_amount,
+          delivery_status,
+          delivery_time,
+          created_at,
+          delivery_address,
+          restaurant!inner(
+            name,
+            address
+          ),
+          addresses!orders_delivery_address_fkey(
+            addressid,
+            fulladdress,
+            label
+          )
+        ''')
+        .eq('delivery_person_id', deliveryPersonId)
+        .eq('delivery_status', deliveryStatusDelivered)
+        .order('delivery_time', ascending: false)
+        .limit(50);
+
+    print('===== COMPLETED ORDERS RESPONSE =====');
+    print('Response: $response');
+    
+    // Post-process to add location coordinates using RPC
+    final List<Map<String, dynamic>> ordersWithCoords = [];
+    
+    for (final order in response) {
+      final orderMap = Map<String, dynamic>.from(order);
+      print('Processing order: ${orderMap['order_number']}');
+      print('Delivery address: ${orderMap['delivery_address']}');
+      
+      // Get coordinates using PostGIS ST_AsText function
+      if (orderMap['delivery_address'] != null) {
+        try {
+          print('Calling RPC for address: ${orderMap['delivery_address']}');
+          final coordResponse = await _supabase
+              .rpc('get_address_coordinates', 
+                params: {'address_id': orderMap['delivery_address']});
+          
+          print('RPC Response: $coordResponse');
+          
+          if (coordResponse != null) {
+            // Add coordinates to addresses object
+            if (orderMap['addresses'] != null && orderMap['addresses'] is Map) {
+              final addressMap = Map<String, dynamic>.from(orderMap['addresses']);
+              addressMap['latitude'] = coordResponse['latitude'];
+              addressMap['longitude'] = coordResponse['longitude'];
+              orderMap['addresses'] = addressMap;
+              print('Updated addresses: ${orderMap['addresses']}');
+            }
+          }
+        } catch (e) {
+          print('Error fetching coordinates for order ${orderMap['order_number']}: $e');
+        }
+      }
+      
+      ordersWithCoords.add(orderMap);
     }
+    
+    print('Final orders with coords: $ordersWithCoords');
+    print('=====================================');
+
+    return ordersWithCoords;
+  } catch (e) {
+    print('Error fetching completed orders: $e');
+    return [];
   }
+}
+
 
   // Accept a pending order
   Future<bool> acceptOrder(String orderId, String deliveryPersonId) async {
@@ -325,7 +429,7 @@ class OrdersDataService {
     }
   }
 
-  // Get pickup address from restaurant (UPDATED: changed from hotels to restaurant)
+  // Get pickup address from restaurant
   String getPickupAddress(Map<String, dynamic> orderData) {
     try {
       if (orderData['restaurant'] != null && 
@@ -340,11 +444,34 @@ class OrdersDataService {
     }
   }
 
-  // Get delivery address (placeholder - you might need to geocode the delivery_location)
+  // Get delivery address from addresses table
   String getDeliveryAddress(Map<String, dynamic> orderData) {
-    // This is a placeholder. In a real app, you'd reverse geocode the delivery_location
-    // to get a human-readable address
-    return orderData['customer_name'] ?? 'Customer Location';
+    try {
+      // Check if addresses data exists (joined from addresses table)
+      if (orderData['addresses'] != null) {
+        final address = orderData['addresses'];
+        
+        // If addresses is a Map (single join result)
+        if (address is Map<String, dynamic>) {
+          final fullAddress = address['fulladdress'] as String?;
+          final label = address['label'] as String?;
+          
+          if (fullAddress != null && fullAddress.isNotEmpty) {
+            // If label exists, show it along with address
+            if (label != null && label.isNotEmpty) {
+              return '$label - $fullAddress';
+            }
+            return fullAddress;
+          }
+        }
+      }
+      
+      // Fallback: if no address found in addresses table
+      return 'Address not found';
+    } catch (e) {
+      print('Error getting delivery address: $e');
+      return 'Address not found';
+    }
   }
 
   // Helper method to check if a delivery status is valid
@@ -367,4 +494,105 @@ class OrdersDataService {
       orderStatusDelivered,
     ].contains(status);
   }
+
+
+  // Update order status with delivery person's location
+Future<bool> updateOrderStatusWithLocation(
+  String orderId, 
+  String deliveryStatus,
+  double latitude,
+  double longitude,
+) async {
+  try {
+    // First, get the delivery_address UUID from the order
+    final orderResponse = await _supabase
+        .from('orders')
+        .select('delivery_address')
+        .eq('order_id', orderId)
+        .single();
+    
+    final deliveryAddressId = orderResponse['delivery_address'] as String?;
+    
+    if (deliveryAddressId == null) {
+      print('No delivery address found for order');
+      return false;
+    }
+    
+    // Update order status
+    Map<String, dynamic> updateData = {
+      'delivery_status': deliveryStatus,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    // Set specific timestamps based on status
+    if (deliveryStatus == deliveryStatusPickedUp) {
+      updateData['pickup_time'] = DateTime.now().toIso8601String();
+    } else if (deliveryStatus == deliveryStatusDelivered) {
+      updateData['delivery_time'] = DateTime.now().toIso8601String();
+      updateData['status'] = orderStatusDelivered;
+    }
+
+    await _supabase
+        .from('orders')
+        .update(updateData)
+        .eq('order_id', orderId);
+    
+    // Update the delivery address location in addresses table
+    if (deliveryStatus == deliveryStatusDelivered) {
+      await _supabase
+          .from('addresses')
+          .update({
+            'location': 'POINT($longitude $latitude)',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('addressid', deliveryAddressId);
+    }
+    
+    return true;
+  } catch (e) {
+    print('Error updating order status with location: $e');
+    return false;
+  }
+}
+
+// Parse PostGIS geography point to latitude/longitude
+Map<String, double>? parseLocationCoordinates(dynamic location) {
+  try {
+    if (location == null) return null;
+    
+    String locationStr = location.toString();
+    
+    // PostGIS returns geography as: {"type":"Point","coordinates":[longitude,latitude]}
+    if (locationStr.contains('coordinates')) {
+      // Try to parse as JSON
+      final jsonData = jsonDecode(locationStr);
+      if (jsonData is Map && jsonData['coordinates'] is List) {
+        final coords = jsonData['coordinates'] as List;
+        if (coords.length >= 2) {
+          return {
+            'latitude': (coords[1] as num).toDouble(),
+            'longitude': (coords[0] as num).toDouble(),
+          };
+        }
+      }
+    }
+    
+    // Alternative format: POINT(longitude latitude)
+    if (locationStr.contains('POINT')) {
+      final regex = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)');
+      final match = regex.firstMatch(locationStr);
+      if (match != null) {
+        return {
+          'latitude': double.parse(match.group(2)!),
+          'longitude': double.parse(match.group(1)!),
+        };
+      }
+    }
+    
+    return null;
+  } catch (e) {
+    print('Error parsing location coordinates: $e');
+    return null;
+  }
+}
 }

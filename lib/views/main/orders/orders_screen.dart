@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../utils/app_colors.dart';
 import 'widgets/active_orders_tab.dart';
-import 'widgets/pending_orders_tab.dart';
 import 'widgets/completed_orders_tab.dart';
+import 'package:geolocator/geolocator.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -21,12 +21,12 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);  // Changed from 3 to 2
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeOrders();
     });
-  }
+}
 
   void _initializeOrders() {
     final authProvider = context.read<AuthProvider>();
@@ -63,8 +63,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           unselectedLabelColor: Colors.white70,
           tabs: const [
             Tab(text: 'Active'),
-            Tab(text: 'Pending'),
-            Tab(text: 'Completed'),
+            Tab(text: 'Completed'),  
           ],
         ),
       ),
@@ -78,12 +77,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             onUpdateOrderStatus: _updateOrderStatusWrapper,
             onShowDeliveryConfirmation: _showDeliveryConfirmation,
           ),
-          PendingOrdersTab(
+          CompletedOrdersTab(  
             onRefresh: _refreshOrders,
-            onAcceptOrder: _acceptOrderWrapper,
-          ),
-          CompletedOrdersTab(
-            onRefresh: _refreshOrders,
+            onNavigateToMap: _navigateToMap, 
           ),
         ],
       ),
@@ -99,13 +95,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     }
   }
 
-  // Wrapper methods to add deliveryPersonId
-  void _acceptOrderWrapper(String orderId, String orderNumber) {
-    final authProvider = context.read<AuthProvider>();
-    if (authProvider.user != null) {
-      _acceptOrder(orderId, orderNumber, context.read<OrdersProvider>(), authProvider.user!.id);
-    }
-  }
 
   void _updateOrderStatusWrapper(String orderId, String status) {
     final authProvider = context.read<AuthProvider>();
@@ -114,36 +103,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     }
   }
 
-  // Action methods
-  Future<void> _acceptOrder(String orderId, String orderNumber, OrdersProvider ordersProvider, String deliveryPersonId) async {
-    try {
-      final success = await ordersProvider.acceptOrder(orderId, deliveryPersonId);
-      if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Order $orderNumber accepted!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to accept order. Please try again.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error accepting order: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _updateOrderStatus(String orderId, String status, OrdersProvider ordersProvider, String deliveryPersonId) async {
     try {
@@ -206,25 +165,42 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   }
 
   Future<void> _navigateToMap(Map<String, dynamic> order) async {
-    final deliveryAddress = order['delivery_location'] ?? 'Unknown Location';
+    double? latitude;
+    double? longitude;
+    
+    // Get coordinates from addresses table
+    final addressData = order['addresses'];
+    
+    if (addressData != null && addressData is Map<String, dynamic>) {
+      latitude = addressData['latitude'] as double?;
+      longitude = addressData['longitude'] as double?;
+    }
     
     try {
-      final googleMapsUrl = Uri.parse(
-        'https://www.google.com/maps/dir/?api=1&destination=$deliveryAddress&travelmode=driving'
-      );
-      
-      if (await canLaunchUrl(googleMapsUrl)) {
-        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+      if (latitude != null && longitude != null) {
+        final googleMapsUrl = Uri.parse(
+          'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving'
+        );
+        
+        if (await canLaunchUrl(googleMapsUrl)) {
+          await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not open Google Maps'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Navigate to: $deliveryAddress'),
-              backgroundColor: AppColors.primary,
-              action: SnackBarAction(
-                label: 'Copy',
-                onPressed: () {},
-              ),
+              content: Text('Location not available for order ${order['order_number'] ?? 'Unknown'}'),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 3),
             ),
           );
         }
@@ -241,51 +217,209 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     }
   }
 
-  void _showDeliveryConfirmation(
-    BuildContext context,
-    String orderId,
-    String orderNumber,
-  ) {
-    final authProvider = context.read<AuthProvider>();
-    final ordersProvider = context.read<OrdersProvider>();
-    
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Delivery'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Are you sure you want to mark order $orderNumber as delivered?'),
-              const SizedBox(height: 16),
-              const Text(
-                'This action cannot be undone.',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
+void _showDeliveryConfirmation(
+  BuildContext context,
+  String orderId,
+  String orderNumber,
+) async {
+  final authProvider = context.read<AuthProvider>();
+  final ordersProvider = context.read<OrdersProvider>();
+  
+  // Fetch current location
+  Position? currentPosition;
+  bool isFetchingLocation = true;
+  String? locationError;
+  
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          // Fetch location when dialog opens
+          if (isFetchingLocation && currentPosition == null && locationError == null) {
+            _getCurrentLocation().then((position) {
+              if (position != null) {
+                setState(() {
+                  currentPosition = position;
+                  isFetchingLocation = false;
+                });
+              } else {
+                setState(() {
+                  locationError = 'Failed to get location';
+                  isFetchingLocation = false;
+                });
+              }
+            });
+          }
+          
+          return AlertDialog(
+            title: const Text('Confirm Delivery'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Are you sure you want to mark order $orderNumber as delivered?'),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 12),
+                
+                // Location status
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 20,
+                      color: isFetchingLocation 
+                          ? AppColors.primary 
+                          : (locationError != null ? AppColors.error : AppColors.success),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: isFetchingLocation
+                          ? const Text(
+                              'Fetching your location...',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                            )
+                          : locationError != null
+                              ? Text(
+                                  locationError!,
+                                  style: const TextStyle(fontSize: 13, color: AppColors.error),
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Delivery location:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${currentPosition!.latitude.toStringAsFixed(6)}, ${currentPosition!.longitude.toStringAsFixed(6)}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                    ),
+                  ],
                 ),
+                
+                const SizedBox(height: 12),
+                const Text(
+                  'Your current location will be saved as proof of delivery.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: (isFetchingLocation || locationError != null || currentPosition == null)
+                    ? null
+                    : () async {
+                        Navigator.of(dialogContext).pop();
+                        await _markAsDelivered(
+                          orderId,
+                          ordersProvider,
+                          authProvider.user!.id,
+                          currentPosition!,
+                        );
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  disabledBackgroundColor: AppColors.success.withOpacity(0.5),
+                ),
+                child: isFetchingLocation
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text('Confirm Delivery'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _updateOrderStatus(orderId, 'Delivered', ordersProvider, authProvider.user!.id);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.success,
-              ),
-              child: const Text('Confirm Delivery'),
-            ),
-          ],
-        );
-      },
+          );
+        },
+      );
+    },
+  );
+}
+
+Future<Position?> _getCurrentLocation() async {
+  try {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
     );
+    return position;
+  } catch (e) {
+    print('Error getting location: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error getting location: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+    return null;
   }
+}
+
+Future<void> _markAsDelivered(
+  String orderId,
+  OrdersProvider ordersProvider,
+  String deliveryPersonId,
+  Position position,
+) async {
+  try {
+    final success = await ordersProvider.updateOrderStatusWithLocation(
+      orderId,
+      'Delivered',
+      deliveryPersonId,
+      position.latitude,
+      position.longitude,
+    );
+    
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Order marked as Delivered'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update order status. Please try again.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating order: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+}
 }

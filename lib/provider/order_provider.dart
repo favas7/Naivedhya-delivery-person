@@ -266,6 +266,43 @@ class OrdersProvider with ChangeNotifier {
         return status ?? 'Unknown';
     }
   }
+
+  // Update order status with delivery location
+Future<bool> updateOrderStatusWithLocation(
+  String orderId, 
+  String deliveryStatus, 
+  String deliveryPersonId,
+  double latitude,
+  double longitude,
+) async {
+  try {
+    final success = await _ordersService.updateOrderStatusWithLocation(
+      orderId, 
+      deliveryStatus,
+      latitude,
+      longitude,
+    );
+    
+    if (success) {
+      // Refresh active and completed orders based on the status
+      if (deliveryStatus == 'Delivered') {
+        await Future.wait([
+          fetchActiveOrders(deliveryPersonId),
+          fetchCompletedOrders(deliveryPersonId),
+        ]);
+      } else {
+        await fetchActiveOrders(deliveryPersonId);
+      }
+      
+      // Notify DeliveryProvider to sync
+      _onOrdersChanged?.call(deliveryPersonId);
+    }
+    return success;
+  } catch (e) {
+    print('Error updating order status with location: $e');
+    return false;
+  }
+}
   
   // Get rating for completed orders (placeholder)
   double getOrderRating(Map<String, dynamic> orderData) {
@@ -273,7 +310,10 @@ class OrdersProvider with ChangeNotifier {
     // and fetch the rating for completed orders
     return 4.5;
   }
-  
+  // Parse PostGIS geography location to lat/lng
+Map<String, double>? parseLocationCoordinates(dynamic location) {
+  return _ordersService.parseLocationCoordinates(location);
+}
   @override
   void dispose() {
     _deliveryPersonOrdersSubscription?.unsubscribe();

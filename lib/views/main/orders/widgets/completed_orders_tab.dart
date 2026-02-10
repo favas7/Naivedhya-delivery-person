@@ -7,10 +7,12 @@ import 'error_widget.dart' as custom;
 
 class CompletedOrdersTab extends StatelessWidget {
   final VoidCallback onRefresh;
+  final Function(Map<String, dynamic>)? onNavigateToMap;  // Add this
 
   const CompletedOrdersTab({
     super.key,
     required this.onRefresh,
+    this.onNavigateToMap,  // Add this
   });
 
   @override
@@ -39,7 +41,12 @@ class CompletedOrdersTab extends StatelessWidget {
             itemCount: ordersProvider.completedOrders.length,
             itemBuilder: (context, index) {
               final order = ordersProvider.completedOrders[index];
-              return CompletedOrderCard(order: order);
+              return CompletedOrderCard(
+                order: order,
+                onNavigateToMap: onNavigateToMap != null 
+                    ? () => onNavigateToMap!(order)  // Pass callback
+                    : null,
+              );
             },
           ),
         );
