@@ -34,27 +34,19 @@ class DeliveryDataService {
     }
   }
 
-  // Get today's orders count for delivery person
-  Future<int> getTodaysOrdersCount(String deliveryPersonId) async {
-    try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+Future<int> getTodaysOrdersCount(String deliveryPersonId) async {
+  try {
+    final response = await _supabase
+        .from('orders')
+        .select('order_id')
+        .eq('delivery_person_id', deliveryPersonId);
 
-      final response = await _supabase
-          .from('orders')
-          .select('order_id')
-          .eq('delivery_person_id', deliveryPersonId)
-          .gte('created_at', startOfDay.toIso8601String())
-          .lte('created_at', endOfDay.toIso8601String());
-
-      return response.length;
-    } catch (e) {
-      print('Error fetching today\'s orders count: $e');
-      return 0;
-    }
+    return response.length; 
+  } catch (e) {
+    print('Error fetching orders count: $e');
+    return 0;
   }
-
+}
   // Get today's earnings for delivery person
   Future<double> getTodaysEarnings(String deliveryPersonId) async {
     try {

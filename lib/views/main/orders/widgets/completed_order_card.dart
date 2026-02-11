@@ -20,9 +20,6 @@ class CompletedOrderCard extends StatelessWidget {
     final orderId = order['order_number'] ?? '#${order['order_id']?.toString().substring(0, 8)}';
     final customerName = order['customer_name'] ?? 'Unknown Customer';
     final amount = ordersProvider.formatOrderAmount(order['total_amount'] ?? 0);
-    final deliveredTime = ordersProvider.getTimeAgo(order['delivery_time']);
-    final rating = ordersProvider.getOrderRating(order);
-    
     // Get delivery address
     final addressData = order['addresses'];
     String deliveryAddress = 'Address not available';
@@ -42,23 +39,7 @@ class CompletedOrderCard extends StatelessWidget {
       hasCoordinates = addressData['latitude'] != null && addressData['longitude'] != null;
     }
     
-    // Calculate delivery duration if both created_at and delivery_time are available
-    String? deliveryDuration;
-    if (order['created_at'] != null && order['delivery_time'] != null) {
-      try {
-        final createdAt = DateTime.parse(order['created_at']);
-        final deliveredAt = DateTime.parse(order['delivery_time']);
-        final duration = deliveredAt.difference(createdAt);
-        
-        if (duration.inHours > 0) {
-          deliveryDuration = '${duration.inHours}h ${duration.inMinutes % 60}m';
-        } else {
-          deliveryDuration = '${duration.inMinutes}m';
-        }
-      } catch (e) {
-        deliveryDuration = null;
-      }
-    }
+
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -171,86 +152,86 @@ class CompletedOrderCard extends StatelessWidget {
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 12),
           
-          // Bottom Info Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Delivered time
-              Expanded(
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.schedule,
-                      size: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'Delivered $deliveredTime',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          // // Bottom Info Row
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     // Delivered time
+          //     Expanded(
+          //       child: Row(
+          //         children: [
+          //           const Icon(
+          //             Icons.schedule,
+          //             size: 14,
+          //             color: AppColors.textSecondary,
+          //           ),
+          //           const SizedBox(width: 4),
+          //           Flexible(
+          //             child: Text(
+          //               'Delivered $deliveredTime',
+          //               style: const TextStyle(
+          //                 color: AppColors.textSecondary,
+          //                 fontSize: 12,
+          //               ),
+          //               overflow: TextOverflow.ellipsis,
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     ),
               
-              // Duration if available
-              if (deliveryDuration != null) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.timer_outlined,
-                        size: 12,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        deliveryDuration,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          //     // Duration if available
+          //     if (deliveryDuration != null) ...[
+          //       const SizedBox(width: 8),
+          //       Container(
+          //         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          //         decoration: BoxDecoration(
+          //           color: AppColors.primary.withOpacity(0.1),
+          //           borderRadius: BorderRadius.circular(4),
+          //         ),
+          //         child: Row(
+          //           children: [
+          //             const Icon(
+          //               Icons.timer_outlined,
+          //               size: 12,
+          //               color: AppColors.primary,
+          //             ),
+          //             const SizedBox(width: 4),
+          //             Text(
+          //               deliveryDuration,
+          //               style: const TextStyle(
+          //                 color: AppColors.primary,
+          //                 fontSize: 11,
+          //                 fontWeight: FontWeight.w500,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ],
               
-              // Rating
-              const SizedBox(width: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.star,
-                    color: AppColors.warning,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    rating.toStringAsFixed(1),
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          //     // // Rating
+          //     // const SizedBox(width: 8),
+          //     // Row(
+          //     //   children: [
+          //     //     const Icon(
+          //     //       Icons.star,
+          //     //       color: AppColors.warning,
+          //     //       size: 14,
+          //     //     ),
+          //     //     const SizedBox(width: 4),
+          //     //     Text(
+          //     //       rating.toStringAsFixed(1),
+          //     //       style: const TextStyle(
+          //     //         color: AppColors.textSecondary,
+          //     //         fontSize: 12,
+          //     //         fontWeight: FontWeight.w500,
+          //     //       ),
+          //     //     ),
+          //     //   ],
+          //     // ),
+          //   ],
+          // ),
         ],
       ),
     );

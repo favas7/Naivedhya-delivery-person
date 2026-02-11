@@ -230,11 +230,11 @@ class OrdersProvider with ChangeNotifier {
     return _ordersService.getDeliveryAddress(orderData);
   }
   
-  String calculateDistance(Map<String, dynamic> orderData) {
-    // You can implement distance calculation logic here
-    // For now, return a placeholder
-    return '2.5 km';
-  }
+  // String calculateDistance(Map<String, dynamic> orderData) {
+  //   // You can implement distance calculation logic here
+  //   // For now, return a placeholder
+  //   return '2.5 km';
+  // }
   
   String calculateEstimatedTime(Map<String, dynamic> orderData) {
     final proposedTimeStr = orderData['proposed_delivery_time'] as String?;
@@ -304,12 +304,12 @@ Future<bool> updateOrderStatusWithLocation(
   }
 }
   
-  // Get rating for completed orders (placeholder)
-  double getOrderRating(Map<String, dynamic> orderData) {
-    // This is a placeholder. You might want to add a ratings table
-    // and fetch the rating for completed orders
-    return 4.5;
-  }
+  // // Get rating for completed orders (placeholder)
+  // double getOrderRating(Map<String, dynamic> orderData) {
+  //   // This is a placeholder. You might want to add a ratings table
+  //   // and fetch the rating for completed orders
+  //   return 4.5;
+  // }
   // Parse PostGIS geography location to lat/lng
 Map<String, double>? parseLocationCoordinates(dynamic location) {
   return _ordersService.parseLocationCoordinates(location);
