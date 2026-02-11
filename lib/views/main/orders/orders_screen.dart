@@ -216,150 +216,233 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       }
     }
   }
-
-void _showDeliveryConfirmation(
-  BuildContext context,
-  String orderId,
-  String orderNumber,
-) async {
-  final authProvider = context.read<AuthProvider>();
-  final ordersProvider = context.read<OrdersProvider>();
-  
-  // Fetch current location
-  Position? currentPosition;
-  bool isFetchingLocation = true;
-  String? locationError;
-  
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          // Fetch location when dialog opens
-          if (isFetchingLocation && currentPosition == null && locationError == null) {
-            _getCurrentLocation().then((position) {
-              if (position != null) {
-                setState(() {
-                  currentPosition = position;
-                  isFetchingLocation = false;
-                });
-              } else {
-                setState(() {
-                  locationError = 'Failed to get location';
-                  isFetchingLocation = false;
-                });
-              }
-            });
-          }
-          
+  void _showDeliveryConfirmation(
+    BuildContext context,
+    String orderId,
+    String orderNumber,
+  ) async {
+    final authProvider = context.read<AuthProvider>();
+    final ordersProvider = context.read<OrdersProvider>();
+    
+    // First, check if the delivery address already has coordinates
+    final order = ordersProvider.getOrderById(orderId);
+    bool hasExistingCoordinates = false;
+    
+    if (order != null && order['addresses'] != null) {
+      final addressData = order['addresses'];
+      if (addressData is Map<String, dynamic>) {
+        hasExistingCoordinates = addressData['latitude'] != null && addressData['longitude'] != null;
+      }
+    }
+    
+    // If coordinates already exist, show simple confirmation dialog
+    if (hasExistingCoordinates) {
+      showDialog(
+        context: context,
+        builder: (BuildContext dialogContext) {
           return AlertDialog(
             title: const Text('Confirm Delivery'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Are you sure you want to mark order $orderNumber as delivered?'),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 12),
-                
-                // Location status
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 20,
-                      color: isFetchingLocation 
-                          ? AppColors.primary 
-                          : (locationError != null ? AppColors.error : AppColors.success),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: isFetchingLocation
-                          ? const Text(
-                              'Fetching your location...',
-                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                            )
-                          : locationError != null
-                              ? Text(
-                                  locationError!,
-                                  style: const TextStyle(fontSize: 13, color: AppColors.error),
-                                )
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Delivery location:',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${currentPosition!.latitude.toStringAsFixed(6)}, ${currentPosition!.longitude.toStringAsFixed(6)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 12),
-                const Text(
-                  'Your current location will be saved as proof of delivery.',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
+            content: Text('Are you sure you want to mark order $orderNumber as delivered?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: (isFetchingLocation || locationError != null || currentPosition == null)
-                    ? null
-                    : () async {
-                        Navigator.of(dialogContext).pop();
-                        await _markAsDelivered(
-                          orderId,
-                          ordersProvider,
-                          authProvider.user!.id,
-                          currentPosition!,
-                        );
-                      },
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  await _markAsDeliveredWithoutLocation(
+                    orderId,
+                    ordersProvider,
+                    authProvider.user!.id,
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.success,
-                  disabledBackgroundColor: AppColors.success.withOpacity(0.5),
                 ),
-                child: isFetchingLocation
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text('Confirm Delivery'),
+                child: const Text('Confirm Delivery'),
               ),
             ],
           );
         },
       );
-    },
-  );
-}
+      return;
+    }
+    
+    // If no coordinates, fetch current location
+    Position? currentPosition;
+    bool isFetchingLocation = true;
+    String? locationError;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Fetch location when dialog opens
+            if (isFetchingLocation && currentPosition == null && locationError == null) {
+              _getCurrentLocation().then((position) {
+                if (position != null) {
+                  setState(() {
+                    currentPosition = position;
+                    isFetchingLocation = false;
+                  });
+                } else {
+                  setState(() {
+                    locationError = 'Failed to get location';
+                    isFetchingLocation = false;
+                  });
+                }
+              });
+            }
+            
+            return AlertDialog(
+              title: const Text('Confirm Delivery'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Are you sure you want to mark order $orderNumber as delivered?'),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  
+                  // Location status
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 20,
+                        color: isFetchingLocation 
+                            ? AppColors.primary 
+                            : (locationError != null ? AppColors.error : AppColors.success),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: isFetchingLocation
+                            ? const Text(
+                                'Fetching your location...',
+                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                              )
+                            : locationError != null
+                                ? Text(
+                                    locationError!,
+                                    style: const TextStyle(fontSize: 13, color: AppColors.error),
+                                  )
+                                : Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Delivery location:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${currentPosition!.latitude.toStringAsFixed(6)}, ${currentPosition!.longitude.toStringAsFixed(6)}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Your current location will be saved as proof of delivery.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: (isFetchingLocation || locationError != null || currentPosition == null)
+                      ? null
+                      : () async {
+                          Navigator.of(dialogContext).pop();
+                          await _markAsDelivered(
+                            orderId,
+                            ordersProvider,
+                            authProvider.user!.id,
+                            currentPosition!,
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    disabledBackgroundColor: AppColors.success.withOpacity(0.5),
+                  ),
+                  child: isFetchingLocation
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('Confirm Delivery'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _markAsDeliveredWithoutLocation(
+    String orderId,
+    OrdersProvider ordersProvider,
+    String deliveryPersonId,
+  ) async {
+    try {
+      final success = await ordersProvider.updateOrderStatus(
+        orderId,
+        'Delivered',
+        deliveryPersonId,
+      );
+      
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order marked as Delivered'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update order status. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating order: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 
 Future<Position?> _getCurrentLocation() async {
   try {
