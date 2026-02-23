@@ -3,7 +3,6 @@ import '../../utils/app_colors.dart';
 import '../main/home/home_screen.dart';
 import '../main/orders/orders_screen.dart';
 import '../main/profile/profile_screen.dart';
-import '../main/earnings/earnings_screen.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});
@@ -19,7 +18,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     const HomeScreen(),
     const OrdersScreen(),
     const ProfileScreen(),
-    const EarningsScreen(),
+    // const EarningsScreen(),
   ];
 
   @override
@@ -74,11 +73,11 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
               activeIcon: Icon(Icons.person),
               label: 'Profile',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              activeIcon: Icon(Icons.account_balance_wallet),
-              label: 'Earnings',
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.account_balance_wallet_outlined),
+            //   activeIcon: Icon(Icons.account_balance_wallet),
+            //   label: 'Earnings',
+            // ),
           ],
         ),
       ),
