@@ -38,22 +38,32 @@ class AuthProvider with ChangeNotifier {
         email: email,
         password: password,
       );
+
+      debugPrint('Response user: ${response.user}');
+      debugPrint('Response session: ${response.session}');
+
+      // Supabase returns user but null session when email confirmation is required
       if (response.user != null) {
         _user = response.user;
         return true;
       }
+
+      // If both are null, email is likely already registered
+      _setError('Email may already be registered, or confirmation is required.');
       return false;
+
     } on AuthException catch (e) {
+      debugPrint('AuthException: ${e.message}');
       _setError(e.message);
       return false;
     } catch (e) {
+      debugPrint('Unexpected error: $e');
       _setError('An unexpected error occurred');
       return false;
     } finally {
       _setLoading(false);
     }
   }
-
   Future<bool> signIn(String email, String password) async {
     try {
       _setLoading(true);

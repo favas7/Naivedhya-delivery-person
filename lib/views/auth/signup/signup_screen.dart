@@ -45,38 +45,28 @@ class _SignupScreenState extends State<SignupScreen> {
     userProvider.clearError();
 
     try {
+    debugPrint('=== SIGNUP ATTEMPT ===');
+    debugPrint('Email: ${_formData.emailController.text.trim()}');
       // First create account
       final signupSuccess = await authProvider.signUp(
         _formData.emailController.text.trim(),
         _formData.passwordController.text,
       );
+    debugPrint('Signup result: $signupSuccess');
+    debugPrint('User after signup: ${authProvider.user}');
+    debugPrint('AuthProvider type: ${authProvider.runtimeType}');
 
-      if (!signupSuccess) {
-        // Check if AuthProvider has an errorMessage property instead of error
-        String errorMessage = 'Failed to create account';
-        
-        // Try different possible error property names
-        try {
-          final dynamic provider = authProvider;
-          if (provider.runtimeType.toString().contains('errorMessage')) {
-            errorMessage = provider.errorMessage ?? errorMessage;
-          } else if (provider.runtimeType.toString().contains('error')) {
-            errorMessage = provider.error ?? errorMessage;
-          }
-        } catch (e) {
-          // If accessing error properties fails, use default message
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
+    if (!signupSuccess) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage ?? 'Failed to create account'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+      return;
+    }
 
       if (authProvider.user == null) {
         if (mounted) {
@@ -126,7 +116,10 @@ class _SignupScreenState extends State<SignupScreen> {
           );
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+          debugPrint('=== SIGNUP EXCEPTION ===');
+    debugPrint('Error: $e');
+    debugPrint('Stack: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

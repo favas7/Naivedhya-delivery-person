@@ -1,5 +1,4 @@
-package com.example.naivedhya_delivery_app
-
+package com.delivery.naivedhya
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
