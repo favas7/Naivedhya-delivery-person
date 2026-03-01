@@ -37,11 +37,11 @@ class OrdersDataService {
             updated_at,
             order_items,
             delivery_address,
-            restaurant!inner(
+            restaurant(
               name,
               address
             ),
-            profiles!inner(
+            profiles(
               name,
               phone
             ),
@@ -56,28 +56,28 @@ class OrdersDataService {
           .order('created_at', ascending: false);
 
       print('===== ACTIVE ORDERS RESPONSE =====');
-      print('Response: $response');
-      
-      // Post-process to add location coordinates using RPC
+      print('Raw response count: ${response.length}');
+      for (final o in response) {
+        print('Order: ${o['order_number']} | restaurant: ${o['restaurant']} | profiles: ${o['profiles']}');
+      }
+
       final List<Map<String, dynamic>> ordersWithCoords = [];
-      
+
       for (final order in response) {
         final orderMap = Map<String, dynamic>.from(order);
         print('Processing order: ${orderMap['order_number']}');
         print('Delivery address: ${orderMap['delivery_address']}');
-        
-        // Get coordinates using PostGIS ST_AsText function
+
         if (orderMap['delivery_address'] != null) {
           try {
             print('Calling RPC for address: ${orderMap['delivery_address']}');
             final coordResponse = await _supabase
-                .rpc('get_address_coordinates', 
-                  params: {'address_id': orderMap['delivery_address']});
-            
+                .rpc('get_address_coordinates',
+                    params: {'address_id': orderMap['delivery_address']});
+
             print('RPC Response: $coordResponse');
-            
+
             if (coordResponse != null) {
-              // Add coordinates to addresses object
               if (orderMap['addresses'] != null && orderMap['addresses'] is Map) {
                 final addressMap = Map<String, dynamic>.from(orderMap['addresses']);
                 addressMap['latitude'] = coordResponse['latitude'];
@@ -90,11 +90,11 @@ class OrdersDataService {
             print('Error fetching coordinates for order ${orderMap['order_number']}: $e');
           }
         }
-        
+
         ordersWithCoords.add(orderMap);
       }
-      
-      print('Final orders with coords: $ordersWithCoords');
+
+      print('Final orders count: ${ordersWithCoords.length}');
       print('=====================================');
 
       return ordersWithCoords;
@@ -103,8 +103,8 @@ class OrdersDataService {
       return [];
     }
   }
-
-  // Get pending orders (not assigned to anyone or available for pickup)
+    
+    // Get pending orders (not assigned to anyone or available for pickup)
   Future<List<Map<String, dynamic>>> getPendingOrders() async {
     try {
       final response = await _supabase
@@ -152,7 +152,7 @@ Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) a
           delivery_time,
           created_at,
           delivery_address,
-          restaurant!inner(
+          restaurant(
             name,
             address
           ),
@@ -168,45 +168,36 @@ Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) a
         .limit(50);
 
     print('===== COMPLETED ORDERS RESPONSE =====');
-    print('Response: $response');
-    
-    // Post-process to add location coordinates using RPC
+    print('Raw response count: ${response.length}');
+
     final List<Map<String, dynamic>> ordersWithCoords = [];
-    
+
     for (final order in response) {
       final orderMap = Map<String, dynamic>.from(order);
-      print('Processing order: ${orderMap['order_number']}');
-      print('Delivery address: ${orderMap['delivery_address']}');
-      
-      // Get coordinates using PostGIS ST_AsText function
+
       if (orderMap['delivery_address'] != null) {
         try {
-          print('Calling RPC for address: ${orderMap['delivery_address']}');
           final coordResponse = await _supabase
-              .rpc('get_address_coordinates', 
-                params: {'address_id': orderMap['delivery_address']});
-          
-          print('RPC Response: $coordResponse');
-          
+              .rpc('get_address_coordinates',
+                  params: {'address_id': orderMap['delivery_address']});
+
           if (coordResponse != null) {
-            // Add coordinates to addresses object
             if (orderMap['addresses'] != null && orderMap['addresses'] is Map) {
               final addressMap = Map<String, dynamic>.from(orderMap['addresses']);
               addressMap['latitude'] = coordResponse['latitude'];
               addressMap['longitude'] = coordResponse['longitude'];
               orderMap['addresses'] = addressMap;
-              print('Updated addresses: ${orderMap['addresses']}');
             }
           }
         } catch (e) {
           print('Error fetching coordinates for order ${orderMap['order_number']}: $e');
         }
       }
-      
+
       ordersWithCoords.add(orderMap);
     }
-    
-    print('Final orders with coords: $ordersWithCoords');
+
+    print('Final completed orders count: ${ordersWithCoords.length}');
     print('=====================================');
 
     return ordersWithCoords;
@@ -215,7 +206,6 @@ Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) a
     return [];
   }
 }
-
 
   // Accept a pending order
   Future<bool> acceptOrder(String orderId, String deliveryPersonId) async {
