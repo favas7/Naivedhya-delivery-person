@@ -457,23 +457,26 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   ) async {
     final authProvider = context.read<AuthProvider>();
     final ordersProvider = context.read<OrdersProvider>();
-    
+
     final order = ordersProvider.getOrderById(orderId);
     bool hasExistingCoordinates = false;
-    
+
     if (order != null && order['addresses'] != null) {
       final addressData = order['addresses'];
       if (addressData is Map<String, dynamic>) {
-        hasExistingCoordinates = addressData['latitude'] != null && addressData['longitude'] != null;
+        hasExistingCoordinates =
+            addressData['latitude'] != null && addressData['longitude'] != null;
       }
     }
-    
+
+    // Already has coordinates — simple confirm
     if (hasExistingCoordinates) {
       showDialog(
         context: context,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
                 Container(
@@ -482,47 +485,28 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                     color: AppColors.success.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.check_circle_outline,
-                    color: AppColors.success,
-                    size: 28,
-                  ),
+                  child: Icon(Icons.check_circle_outline,
+                      color: AppColors.success, size: 28),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Confirm Delivery',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
+                const Text('Confirm Delivery',
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               ],
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Are you sure you want to mark order #$orderNumber as delivered?',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey.shade700,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+            content: Text(
+              'Are you sure you want to mark order #$orderNumber as delivered?',
+              style: TextStyle(
+                  fontSize: 15, color: Colors.grey.shade700, height: 1.4),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text('Cancel',
+                    style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -536,16 +520,15 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.success,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Confirm Delivery',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
+                child: const Text('Confirm Delivery',
+                    style:
+                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               ),
             ],
           );
@@ -553,251 +536,128 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       );
       return;
     }
-    
-    Position? currentPosition;
-    bool isFetchingLocation = true;
-    String? locationError;
-    
+
+    // No existing coordinates — ask delivery partner
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            if (isFetchingLocation && currentPosition == null && locationError == null) {
-              _getCurrentLocation().then((position) {
-                if (position != null) {
-                  setState(() {
-                    currentPosition = position;
-                    isFetchingLocation = false;
-                  });
-                } else {
-                  setState(() {
-                    locationError = 'Failed to get location';
-                    isFetchingLocation = false;
-                  });
-                }
-              });
-            }
-            
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.check_circle_outline,
-                      color: AppColors.success,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Confirm Delivery',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Are you sure you want to mark order #$orderNumber as delivered?',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey.shade700,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isFetchingLocation 
-                                    ? AppColors.primary.withOpacity(0.1)
-                                    : (locationError != null 
-                                        ? AppColors.error.withOpacity(0.1)
-                                        : AppColors.success.withOpacity(0.1)),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                isFetchingLocation 
-                                    ? Icons.gps_fixed
-                                    : (locationError != null 
-                                        ? Icons.gps_off
-                                        : Icons.location_on),
-                                size: 20,
-                                color: isFetchingLocation 
-                                    ? AppColors.primary
-                                    : (locationError != null 
-                                        ? AppColors.error
-                                        : AppColors.success),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: isFetchingLocation
-                                  ? Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Fetching location...',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        LinearProgressIndicator(
-                                          backgroundColor: Colors.grey.shade300,
-                                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                                        ),
-                                      ],
-                                    )
-                                  : locationError != null
-                                      ? Text(
-                                          locationError!,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: AppColors.error,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        )
-                                      : Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Delivery location',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade600,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${currentPosition!.latitude.toStringAsFixed(6)}, ${currentPosition!.longitude.toStringAsFixed(6)}',
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: AppColors.textPrimary,
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: 'monospace',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                            ),
-                          ],
-                        ),
-                        if (!isFetchingLocation && locationError == null && currentPosition != null) ...[
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Your location will be saved as proof of delivery',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.blue.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                ElevatedButton(
-                  onPressed: (isFetchingLocation || locationError != null || currentPosition == null)
-                      ? null
-                      : () async {
-                          Navigator.of(dialogContext).pop();
-                          await _markAsDelivered(
-                            orderId,
-                            ordersProvider,
-                            authProvider.user!.id,
-                            currentPosition!,
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey.shade300,
-                    disabledForegroundColor: Colors.grey.shade500,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: isFetchingLocation
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Text(
-                          'Confirm Delivery',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
+                child: Icon(Icons.location_on,
+                    color: AppColors.primary, size: 28),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Save Delivery Location?',
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Order #$orderNumber',
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This address has no saved location. Would you like to save your current GPS location for future deliveries?',
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    height: 1.5),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            );
-          },
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 16, color: Colors.blue.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Saving helps auto-navigate to this address in future orders.',
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.blue.shade700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            // Deliver without location
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await _markAsDeliveredWithoutLocation(
+                  orderId,
+                  ordersProvider,
+                  authProvider.user!.id,
+                );
+              },
+              style: TextButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              child: Text(
+                'Skip & Deliver',
+                style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+            // Save location & deliver
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await _fetchLocationAndDeliver(
+                  orderId,
+                  orderNumber,
+                  ordersProvider,
+                  authProvider.user!.id,
+                );
+              },
+              icon: const Icon(Icons.my_location, size: 16),
+              label: const Text('Save & Deliver',
+                  style:
+                      TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+            ),
+          ],
         );
       },
     );
   }
-
+  
   Future<void> _markAsDeliveredWithoutLocation(
     String orderId,
     OrdersProvider ordersProvider,
@@ -863,6 +723,76 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       }
     }
   }
+    Future<void> _fetchLocationAndDeliver(
+    String orderId,
+    String orderNumber,
+    OrdersProvider ordersProvider,
+    String deliveryPersonId,
+  ) async {
+    // Show loading snackbar
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.white)),
+              ),
+              const SizedBox(width: 12),
+              const Text('Fetching your location...'),
+            ],
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 10),
+        ),
+      );
+    }
+
+    final position = await _getCurrentLocation();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    }
+
+    if (position == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.gps_off, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                const Expanded(
+                    child: Text('Could not get location. Delivering without saving.')),
+              ],
+            ),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+      // Fall back to delivering without location
+      await _markAsDeliveredWithoutLocation(
+          orderId, ordersProvider, deliveryPersonId);
+      return;
+    }
+
+    await _markAsDelivered(
+        orderId, ordersProvider, deliveryPersonId, position);
+  }
+    
 
   Future<Position?> _getCurrentLocation() async {
     try {

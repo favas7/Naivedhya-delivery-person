@@ -80,10 +80,26 @@ class OrdersDataService {
             if (coordResponse != null) {
               if (orderMap['addresses'] != null && orderMap['addresses'] is Map) {
                 final addressMap = Map<String, dynamic>.from(orderMap['addresses']);
-                addressMap['latitude'] = coordResponse['latitude'];
-                addressMap['longitude'] = coordResponse['longitude'];
-                orderMap['addresses'] = addressMap;
-                print('Updated addresses: ${orderMap['addresses']}');
+
+                // RPC returns JSON — Supabase may deserialize it as Map or String
+                Map<String, dynamic> coords;
+                if (coordResponse is String) {
+                  coords = Map<String, dynamic>.from(jsonDecode(coordResponse));
+                } else {
+                  coords = Map<String, dynamic>.from(coordResponse);
+                }
+
+                final lat = coords['latitude'];
+                final lng = coords['longitude'];
+
+                if (lat != null && lng != null) {
+                  addressMap['latitude'] = (lat as num).toDouble();
+                  addressMap['longitude'] = (lng as num).toDouble();
+                  orderMap['addresses'] = addressMap;
+                  print('Updated addresses with coords: $lat, $lng');
+                } else {
+                  print('RPC returned null lat/lng for order ${orderMap['order_number']}');
+                }
               }
             }
           } catch (e) {
@@ -184,9 +200,26 @@ Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) a
           if (coordResponse != null) {
             if (orderMap['addresses'] != null && orderMap['addresses'] is Map) {
               final addressMap = Map<String, dynamic>.from(orderMap['addresses']);
-              addressMap['latitude'] = coordResponse['latitude'];
-              addressMap['longitude'] = coordResponse['longitude'];
-              orderMap['addresses'] = addressMap;
+
+              // RPC returns JSON — Supabase may deserialize it as Map or String
+              Map<String, dynamic> coords;
+              if (coordResponse is String) {
+                coords = Map<String, dynamic>.from(jsonDecode(coordResponse));
+              } else {
+                coords = Map<String, dynamic>.from(coordResponse);
+              }
+
+              final lat = coords['latitude'];
+              final lng = coords['longitude'];
+
+              if (lat != null && lng != null) {
+                addressMap['latitude'] = (lat as num).toDouble();
+                addressMap['longitude'] = (lng as num).toDouble();
+                orderMap['addresses'] = addressMap;
+                print('Updated addresses with coords: $lat, $lng');
+              } else {
+                print('RPC returned null lat/lng for order ${orderMap['order_number']}');
+              }
             }
           }
         } catch (e) {
@@ -488,45 +521,32 @@ Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) a
 
   // Update order status with delivery person's location (only if address doesn't have coordinates)
   Future<bool> updateOrderStatusWithLocation(
-    String orderId, 
+    String orderId,
     String deliveryStatus,
+    String deliveryPersonId, 
     double latitude,
     double longitude,
   ) async {
     try {
-      // First, get the delivery_address UUID from the order
       final orderResponse = await _supabase
           .from('orders')
           .select('delivery_address')
           .eq('order_id', orderId)
           .single();
-      
+
       final deliveryAddressId = orderResponse['delivery_address'] as String?;
-      
+
       if (deliveryAddressId == null) {
         print('No delivery address found for order');
         return false;
       }
-      
-      // Check if the address already has location coordinates
-      final addressResponse = await _supabase
-          .from('addresses')
-          .select('location')
-          .eq('addressid', deliveryAddressId)
-          .single();
-      
-      final existingLocation = addressResponse['location'];
-      bool hasExistingCoordinates = existingLocation != null;
-      
-      print('Address $deliveryAddressId has existing coordinates: $hasExistingCoordinates');
-      
+
       // Update order status
       Map<String, dynamic> updateData = {
         'delivery_status': deliveryStatus,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      // Set specific timestamps based on status
       if (deliveryStatus == deliveryStatusPickedUp) {
         updateData['pickup_time'] = DateTime.now().toIso8601String();
       } else if (deliveryStatus == deliveryStatusDelivered) {
@@ -538,28 +558,31 @@ Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) a
           .from('orders')
           .update(updateData)
           .eq('order_id', orderId);
-      
-      // Only update the delivery address location if it doesn't already have coordinates
-      if (deliveryStatus == deliveryStatusDelivered && !hasExistingCoordinates) {
-        print('Updating address location with delivery person coordinates');
-        await _supabase
-            .from('addresses')
-            .update({
-              'location': 'POINT($longitude $latitude)',
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('addressid', deliveryAddressId);
-      } else if (hasExistingCoordinates) {
-        print('Skipping location update - address already has coordinates');
+
+      // Save GPS coordinates via RPC (PostGIS safe)
+      if (deliveryStatus == deliveryStatusDelivered) {
+        try {
+            final result = await _supabase.rpc(
+              'update_address_location',
+              params: {
+                'p_address_id': deliveryAddressId,
+                'p_lat': latitude,
+                'p_lng': longitude,
+              },
+            );
+          print('Location saved: $result');
+        } catch (e) {
+          // Non-fatal — order is still marked delivered
+          print('Failed to save location: $e');
+        }
       }
-      
+
       return true;
     } catch (e) {
       print('Error updating order status with location: $e');
       return false;
     }
   }
-
 
 // Parse PostGIS geography point to latitude/longitude
 Map<String, double>? parseLocationCoordinates(dynamic location) {

@@ -279,6 +279,7 @@ Future<bool> updateOrderStatusWithLocation(
     final success = await _ordersService.updateOrderStatusWithLocation(
       orderId, 
       deliveryStatus,
+      deliveryPersonId,  
       latitude,
       longitude,
     );
