@@ -47,6 +47,8 @@ class DeliveryProvider with ChangeNotifier {
   
   // Initialize delivery data for current user
   Future<void> initializeDeliveryData(String userId) async {
+     print('=== initializeDeliveryData CALLED === ${StackTrace.current}'); 
+
     try {
       _setLoading(true);
       _setError(null);
@@ -121,51 +123,60 @@ class DeliveryProvider with ChangeNotifier {
   }
   
   // Setup real-time subscriptions
-  void _setupRealtimeSubscriptions(String userId) {
-    // Subscribe to delivery personnel data changes
+void _setupRealtimeSubscriptions(String userId) {
     _personnelSubscription = _dataService.subscribeToDeliveryPersonnelData(
       userId,
       (updatedData) {
+        final currentAvailability = _deliveryPersonnelData?['is_available'];
         _deliveryPersonnelData = {..._deliveryPersonnelData!, ...updatedData};
+        if (currentAvailability != null) {
+          _deliveryPersonnelData!['is_available'] = currentAvailability;
+        }
         notifyListeners();
       },
     );
     
-    // Subscribe to orders changes
     _ordersSubscription = _dataService.subscribeToOrders(
       userId,
       () {
-        // Refresh stats when orders change
         _fetchStatsData(userId);
       },
     );
   }
-  
-  // Toggle availability status
   Future<bool> toggleAvailability(String userId) async {
     try {
+      // Check if device has internet connectivity
       // Check connectivity
       final hasConnection = await _connectivityChecker.hasConnection();
       if (!hasConnection) {
+        // No internet connection, throw an error
         _setError(AppError(
           type: ErrorType.network,
           message: 'No internet connection. Please check your network and try again.',
         ));
         return false;
       }
+
+      // Toggle availability status
       
       final newStatus = !isAvailable;
       final success = await _dataService.updateAvailabilityStatus(userId, newStatus);
+
       
       if (success && _deliveryPersonnelData != null) {
+        // Update availability status in the local data
         _deliveryPersonnelData!['is_available'] = newStatus;
+        // Notify listeners to refresh the UI
         notifyListeners();
         return true;
       }
       return false;
     } catch (e) {
+      // Error occurred, set error message
       _setError(AppError.fromException(e));
       return false;
+   
+/*******  e9f2c48b-12ee-44a3-b598-704ca7b5bf20  *******/
     }
   }
   
