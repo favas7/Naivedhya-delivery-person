@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:naivedhya_delivery_app/provider/delivery_provider.dart';
 import 'package:naivedhya_delivery_app/utils/l10n/app_localizations.dart';
 import 'package:naivedhya_delivery_app/provider/auth_provider.dart';
 import 'package:naivedhya_delivery_app/provider/language_provider.dart';
@@ -33,8 +34,8 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer2<AuthProvider, UserProvider>(
-        builder: (context, authProvider, userProvider, child) {
+      body: Consumer3<AuthProvider, UserProvider, DeliveryProvider>(
+        builder: (context, authProvider, userProvider, deliveryProvider, child) {
           // Load user profile if not loaded
           if (authProvider.user != null && userProvider.userProfile == null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -87,7 +88,7 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 // Profile Header
-                _buildProfileHeader(context, l10n, userProvider, authProvider),
+                _buildProfileHeader(context, l10n, userProvider, authProvider, deliveryProvider),
                 
                 const SizedBox(height: 20),
                 
@@ -106,6 +107,8 @@ class ProfileScreen extends StatelessWidget {
     AppLocalizations l10n,
     UserProvider userProvider,
     AuthProvider authProvider,
+    DeliveryProvider deliveryProvider, // ADD THIS
+
   ) {
     final profile = userProvider.userProfile;
     final stats = userProvider.userStats;
@@ -119,8 +122,8 @@ class ProfileScreen extends StatelessWidget {
                       authProvider.user?.email ?? 
                       'deliverypartner@naivedhya.com';
     
-    final earnings = (profile?['earnings'] ?? 0.0).toDouble();
-    final rating = (profile?['rating'] ?? 0.0).toDouble();
+    final earnings = deliveryProvider.todaysEarnings;
+    // final rating = (profile?['rating'] ?? 0.0).toDouble();
     final isVerified = profile?['is_verified'] ?? false;
     
     // Get stats - use database count for orders
@@ -204,11 +207,11 @@ class ProfileScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStatItem(
-                  rating > 0 ? rating.toStringAsFixed(1) : '0.0',
-                  l10n.rating,
-                  Icons.star,
-                ),
+                // _buildStatItem(
+                //   rating > 0 ? rating.toStringAsFixed(1) : '0.0',
+                //   l10n.rating,
+                //   Icons.star,
+                // ),
                 _buildStatItem(
                   totalOrders.toString(),
                   l10n.orders,
