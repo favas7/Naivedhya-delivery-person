@@ -10,6 +10,9 @@ class LocationService extends ChangeNotifier {
   factory LocationService() => _instance;
   LocationService._internal();
 
+  // ignore: unused_field
+  String? _currentDeliveryPartnerId;
+
   final SupabaseClient _supabase = Supabase.instance.client;
   
   Position? _currentPosition;
@@ -90,8 +93,9 @@ class LocationService extends ChangeNotifier {
 
   // Start location tracking
   Future<bool> startTracking(String deliveryPartnerId, {String? orderId}) async {
+    _currentDeliveryPartnerId = deliveryPartnerId;
     if (_isTracking) return true;
-    
+
     if (!_hasPermission) {
       _hasPermission = await _checkLocationPermission();
       if (!_hasPermission) return false;
@@ -100,7 +104,7 @@ class LocationService extends ChangeNotifier {
     try {
       const LocationSettings locationSettings = LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Update every 10 meters
+        distanceFilter: 10, // triggers on 10m movement
       );
 
       _positionStream = Geolocator.getPositionStream(
@@ -116,10 +120,10 @@ class LocationService extends ChangeNotifier {
         },
       );
 
-      // Also update location every 30 seconds even if position hasn't changed much
+      // Fallback: update every 30s even if partner hasn't moved 10m
       _locationUpdateTimer = Timer.periodic(
         const Duration(seconds: 30),
-        (timer) {
+        (_) {
           if (_currentPosition != null) {
             _updateLocationInDatabase(deliveryPartnerId, _currentPosition!, orderId);
           }
@@ -134,48 +138,48 @@ class LocationService extends ChangeNotifier {
       return false;
     }
   }
-
+    
   // Stop location tracking
   void stopTracking() {
     _positionStream?.cancel();
     _locationUpdateTimer?.cancel();
+    _positionStream = null;
+    _locationUpdateTimer = null;
     _isTracking = false;
+
+    if (_currentDeliveryPartnerId != null) {
+      _supabase
+          .from('delivery_personnel')
+          .update({'current_location': null})
+          .eq('user_id', _currentDeliveryPartnerId!)
+          .then((_) => debugPrint('Location cleared on offline'))
+          .catchError((e) => debugPrint('Error clearing location: $e'));
+    }
+
+    _currentDeliveryPartnerId = null;
     notifyListeners();
   }
-
+    
   // Update location in database
   Future<void> _updateLocationInDatabase(
-    String deliveryPartnerId, 
-    Position position, 
-    String? orderId
+    String deliveryPartnerId,
+    Position position,
+    String? orderId,
   ) async {
     try {
-      // Deactivate previous location records
       await _supabase
-          .from('delivery_locations')
-          .update({'is_active': false})
-          .eq('delivery_partner_id', deliveryPartnerId)
-          .eq('is_active', true);
-
-      // Insert new location record
-      await _supabase.from('delivery_locations').insert({
-        'delivery_partner_id': deliveryPartnerId,
-        'order_id': orderId,
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'accuracy': position.accuracy,
-        'speed': position.speed,
-        'heading': position.heading,
-        'timestamp': DateTime.now().toIso8601String(),
-        'is_active': true,
-      });
+          .from('delivery_personnel')
+          .update({
+            'current_location': 'POINT(${position.longitude} ${position.latitude})',
+          })
+          .eq('user_id', deliveryPartnerId);
 
       debugPrint('Location updated: ${position.latitude}, ${position.longitude}');
     } catch (e) {
-      debugPrint('Error updating location in database: $e');
+      debugPrint('Error updating location: $e');
     }
   }
-
+  
   // Get distance between two points
   double getDistanceBetween(
     double startLatitude,
@@ -280,7 +284,8 @@ class LocationService extends ChangeNotifier {
 
   @override
   void dispose() {
-    stopTracking();
+    _positionStream?.cancel();
+    _locationUpdateTimer?.cancel();
     super.dispose();
   }
 }

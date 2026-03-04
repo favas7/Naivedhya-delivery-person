@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:naivedhya_delivery_app/service/delivery_data_service.dart';
+import 'package:naivedhya_delivery_app/service/location_service.dart';
 import 'package:naivedhya_delivery_app/utils/connectivity_checker.dart';
 import 'package:naivedhya_delivery_app/utils/error_type.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,6 +10,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class DeliveryProvider with ChangeNotifier {
   final DeliveryDataService _dataService = DeliveryDataService();
   final ConnectivityChecker _connectivityChecker = ConnectivityChecker();
+  final LocationService _locationService = LocationService();
+
   
   // Delivery personnel data
   Map<String, dynamic>? _deliveryPersonnelData;
@@ -143,43 +146,40 @@ void _setupRealtimeSubscriptions(String userId) {
       },
     );
   }
-  Future<bool> toggleAvailability(String userId) async {
-    try {
-      // Check if device has internet connectivity
-      // Check connectivity
-      final hasConnection = await _connectivityChecker.hasConnection();
-      if (!hasConnection) {
-        // No internet connection, throw an error
-        _setError(AppError(
-          type: ErrorType.network,
-          message: 'No internet connection. Please check your network and try again.',
-        ));
-        return false;
-      }
 
-      // Toggle availability status
-      
-      final newStatus = !isAvailable;
-      final success = await _dataService.updateAvailabilityStatus(userId, newStatus);
-
-      
-      if (success && _deliveryPersonnelData != null) {
-        // Update availability status in the local data
-        _deliveryPersonnelData!['is_available'] = newStatus;
-        // Notify listeners to refresh the UI
-        notifyListeners();
-        return true;
-      }
+Future<bool> toggleAvailability(String userId) async {
+  try {
+    final hasConnection = await _connectivityChecker.hasConnection();
+    if (!hasConnection) {
+      _setError(AppError(
+        type: ErrorType.network,
+        message: 'No internet connection. Please check your network and try again.',
+      ));
       return false;
-    } catch (e) {
-      // Error occurred, set error message
-      _setError(AppError.fromException(e));
-      return false;
-   
-/*******  e9f2c48b-12ee-44a3-b598-704ca7b5bf20  *******/
     }
+
+    final newStatus = !isAvailable;
+    final success = await _dataService.updateAvailabilityStatus(userId, newStatus);
+
+    if (success && _deliveryPersonnelData != null) {
+      _deliveryPersonnelData!['is_available'] = newStatus;
+
+      // Start or stop location tracking based on availability
+      if (newStatus) {
+        await _locationService.startTracking(userId);
+      } else {
+        _locationService.stopTracking(); 
+      }
+
+      notifyListeners();
+      return true;
+    }
+    return false;
+  } catch (e) {
+    _setError(AppError.fromException(e));
+    return false;
   }
-  
+}
   // Refresh all data
   Future<void> refreshData(String userId) async {
     try {

@@ -142,4 +142,21 @@ Future<int> getTodaysOrdersCount(String deliveryPersonId) async {
         )
         .subscribe();
   }
+
+  Future<bool> updateCurrentLocation(String userId, double lat, double lng) async {
+    try {
+      await _supabase
+          .from('delivery_personnel')
+          .update({
+            'current_location': 'POINT($lng $lat)', // WKT format - PostGIS accepts this
+          })
+          .eq('user_id', userId);
+      return true;
+    } catch (e) {
+      print('Error updating location: $e');
+      return false;
+    }
+  }
+
+
 }

@@ -86,6 +86,8 @@ class LocationSettingsManager {
   Future<void> updateLocationServiceSettings(
     LocationService locationService,
     LocationProvider locationProvider,
+    String userId, 
+
   ) async {
     // Stop current tracking if it doesn't match new settings
     if (!locationService.shouldTrackLocation(locationProvider)) {
