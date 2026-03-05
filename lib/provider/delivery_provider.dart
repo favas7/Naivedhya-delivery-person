@@ -57,7 +57,7 @@ class DeliveryProvider with ChangeNotifier {
       _setError(null);
       
       // Check connectivity first
-      final hasConnection = await _connectivityChecker.hasConnection();
+      final hasConnection = await _connectivityChecker.hasConnectionQuick();
       if (!hasConnection) {
         _setError(AppError(
           type: ErrorType.network,
@@ -85,7 +85,7 @@ class DeliveryProvider with ChangeNotifier {
       }
     } catch (e) {
       // Check connectivity again on error
-      final hasConnection = await _connectivityChecker.hasConnection();
+      final hasConnection = await _connectivityChecker.hasConnectionQuick();
       if (!hasConnection) {
         _setError(AppError(
           type: ErrorType.network,
@@ -104,7 +104,7 @@ class DeliveryProvider with ChangeNotifier {
   Future<void> _fetchStatsData(String userId) async {
     try {
       // Check connectivity
-      final hasConnection = await _connectivityChecker.hasConnection();
+      final hasConnection = await _connectivityChecker.hasConnectionQuick();
       if (!hasConnection) {
         throw Exception('No internet connection');
       }
@@ -149,7 +149,7 @@ void _setupRealtimeSubscriptions(String userId) {
 
 Future<bool> toggleAvailability(String userId) async {
   try {
-    final hasConnection = await _connectivityChecker.hasConnection();
+    final hasConnection = await _connectivityChecker.hasConnectionQuick();
     if (!hasConnection) {
       _setError(AppError(
         type: ErrorType.network,
@@ -184,7 +184,7 @@ Future<bool> toggleAvailability(String userId) async {
   Future<void> refreshData(String userId) async {
     try {
       // Check connectivity
-      final hasConnection = await _connectivityChecker.hasConnection();
+      final hasConnection = await _connectivityChecker.hasConnectionQuick();
       if (!hasConnection) {
         _setError(AppError(
           type: ErrorType.network,

@@ -123,12 +123,23 @@ class LocationService extends ChangeNotifier {
       // Fallback: update every 30s even if partner hasn't moved 10m
       _locationUpdateTimer = Timer.periodic(
         const Duration(seconds: 30),
-        (_) {
-          if (_currentPosition != null) {
-            _updateLocationInDatabase(deliveryPartnerId, _currentPosition!, orderId);
+        (_) async {
+          try {
+            final freshPosition = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+            );
+            _currentPosition = freshPosition;
+            _updateLocationInDatabase(deliveryPartnerId, freshPosition, orderId);
+            notifyListeners();
+          } catch (e) {
+            debugPrint('Error getting fresh position: $e');
+            if (_currentPosition != null) {
+              _updateLocationInDatabase(deliveryPartnerId, _currentPosition!, orderId);
+            }
           }
         },
       );
+
 
       _isTracking = true;
       notifyListeners();
