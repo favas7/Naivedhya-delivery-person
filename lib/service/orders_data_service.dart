@@ -441,11 +441,19 @@ Future<List<Map<String, dynamic>>> getCompletedOrders(String deliveryPersonId) a
   // Get customer phone from profiles
   String getCustomerPhone(Map<String, dynamic> orderData) {
     try {
-      if (orderData['profiles'] != null && 
-          orderData['profiles'] is List && 
-          orderData['profiles'].isNotEmpty) {
-        return orderData['profiles'][0]['phone'] ?? 'N/A';
+      final profiles = orderData['profiles'];
+      if (profiles == null) return 'N/A';
+
+      // Supabase returns a Map for single foreign-key joins
+      if (profiles is Map<String, dynamic>) {
+        return profiles['phone'] ?? 'N/A';
       }
+
+      // Fallback: handle List shape just in case
+      if (profiles is List && profiles.isNotEmpty) {
+        return profiles[0]['phone'] ?? 'N/A';
+      }
+
       return 'N/A';
     } catch (e) {
       return 'N/A';

@@ -191,12 +191,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           ];
         },
         body: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(0),
-              topRight: Radius.circular(0),
-            ),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF8F9FA),
           ),
           child: TabBarView(
             controller: _tabController,
@@ -242,7 +238,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         SnackBar(
           content: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
               const SizedBox(width: 12),
               const Text('Orders refreshed'),
             ],
@@ -272,7 +268,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Text('Order marked as $status'),
               ],
@@ -288,7 +284,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 const Expanded(child: Text('Failed to update order status. Please try again.')),
               ],
@@ -306,7 +302,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(child: Text('Error updating order: $e')),
               ],
@@ -328,14 +324,14 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     );
     try {
       if (await canLaunchUrl(launchUri)) {
-        await launchUrl(launchUri);
+        await launchUrl(launchUri, mode: LaunchMode.externalApplication);
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.white, size: 20),
+                  const Icon(Icons.error_outline, color: Colors.white, size: 20),
                   const SizedBox(width: 12),
                   const Text('Could not launch phone dialer'),
                 ],
@@ -354,7 +350,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(child: Text('Error making call: $e')),
               ],
@@ -394,7 +390,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               SnackBar(
                 content: Row(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.white, size: 20),
+                    const Icon(Icons.error_outline, color: Colors.white, size: 20),
                     const SizedBox(width: 12),
                     const Text('Could not open Google Maps'),
                   ],
@@ -413,7 +409,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.location_off, color: Colors.white, size: 20),
+                  const Icon(Icons.location_off, color: Colors.white, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text('Location not available for order ${order['order_number'] ?? 'Unknown'}'),
@@ -435,7 +431,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(child: Text('Error opening maps: $e')),
               ],
@@ -605,7 +601,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             ],
           ),
           actions: [
-            // Deliver without location
             TextButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
@@ -627,7 +622,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                     fontWeight: FontWeight.w600),
               ),
             ),
-            // Save location & deliver
             ElevatedButton.icon(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
@@ -675,7 +669,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 const Text('Order marked as Delivered'),
               ],
@@ -691,7 +685,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 const Expanded(child: Text('Failed to update order status. Please try again.')),
               ],
@@ -709,7 +703,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(child: Text('Error updating order: $e')),
               ],
@@ -723,13 +717,13 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       }
     }
   }
-    Future<void> _fetchLocationAndDeliver(
+
+  Future<void> _fetchLocationAndDeliver(
     String orderId,
     String orderNumber,
     OrdersProvider ordersProvider,
     String deliveryPersonId,
   ) async {
-    // Show loading snackbar
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -783,7 +777,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           ),
         );
       }
-      // Fall back to delivering without location
       await _markAsDeliveredWithoutLocation(
           orderId, ordersProvider, deliveryPersonId);
       return;
@@ -792,7 +785,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     await _markAsDelivered(
         orderId, ordersProvider, deliveryPersonId, position);
   }
-    
 
   Future<Position?> _getCurrentLocation() async {
     try {
@@ -826,7 +818,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 const Text('Order marked as Delivered'),
               ],
@@ -842,7 +834,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 const Expanded(child: Text('Failed to update order status. Please try again.')),
               ],
@@ -860,7 +852,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(child: Text('Error updating order: $e')),
               ],
@@ -876,7 +868,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   }
 }
 
-// Custom delegate for the TabBar
 class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverTabBarDelegate(this._tabBar);
 
